@@ -14,8 +14,14 @@ import {
   type Room,
 } from './rooms.js';
 
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+const corsOrigin: any = ALLOWED_ORIGINS.includes('*') ? '*' : ALLOWED_ORIGINS;
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: corsOrigin }));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -26,7 +32,7 @@ app.post('/rooms', (_req, res) => {
 });
 
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: { origin: '*' } });
+const io = new Server(httpServer, { cors: { origin: corsOrigin } });
 
 function broadcast(room: Room): void {
   for (const p of room.players.values()) {

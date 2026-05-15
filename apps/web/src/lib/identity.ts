@@ -21,10 +21,12 @@ export function setName(name: string): void {
 
 export function getServerUrl(): string {
   if (typeof window === 'undefined') return 'http://localhost:4000';
-  // Allow override via query param ?server=... or stored value.
   const stored = localStorage.getItem('sgb.server');
   if (stored) return stored;
-  // Default: same host as page, port 4000.
+  // Production: NEXT_PUBLIC_SERVER_URL is baked in at build time.
+  const envUrl = process.env.NEXT_PUBLIC_SERVER_URL;
+  if (envUrl) return envUrl;
+  // Local dev fallback: same host as page, port 4000.
   const { protocol, hostname } = window.location;
   return `${protocol}//${hostname}:4000`;
 }
