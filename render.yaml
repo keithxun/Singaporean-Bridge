@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: sgb-server
+    runtime: docker
+    plan: free
+    dockerfilePath: ./apps/server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: ALLOWED_ORIGINS
+        sync: false  # set this in the Render dashboard to your Vercel URL, e.g. https://your-app.vercel.app
