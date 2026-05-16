@@ -2,10 +2,11 @@
 
 export function getPlayerId(): string {
   if (typeof window === 'undefined') return '';
-  let id = localStorage.getItem('sgb.playerId');
+  // sessionStorage: per-tab. Survives refresh, distinct across tabs/windows.
+  let id = sessionStorage.getItem('sgb.playerId');
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem('sgb.playerId', id);
+    sessionStorage.setItem('sgb.playerId', id);
   }
   return id;
 }
