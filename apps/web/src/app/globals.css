@@ -8,7 +8,6 @@ html, body {
   background: #0b3d2e;
   color: #f3f4f6;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-  overflow: hidden;
   margin: 0;
   padding: 0;
   -webkit-text-size-adjust: 100%;
@@ -16,17 +15,26 @@ html, body {
 
 html {
   scroll-behavior: auto;
+  overflow-x: hidden;
+  scroll-padding-top: 0;
 }
 
-/* Prevent unwanted auto-scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Prevent unwanted auto-scroll on focus */
 *:focus {
   scroll-margin: 0;
-  scroll-margin-top: 0;
-  scroll-margin-bottom: 0;
 }
 
 input, textarea, select {
   font-size: 16px;
+}
+
+/* Prevent auto-scroll when new elements appear */
+main {
+  scroll-behavior: auto;
 }
 
 @keyframes slideIn {
