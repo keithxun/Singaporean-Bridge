@@ -18,6 +18,8 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
         const pos = relativePos(view.seat, s);
         const played = trick?.cards.find((c) => c.seat === s);
         const isTurn = view.turn === s;
+        const isDeclarer = view.contract?.declarer === s;
+        const isPartner = view.contract && view.partnerSeatRevealed === s;
         const label = `Seat ${s}${names[s] ? ` · ${names[s]}` : ''}${view.dealer === s ? ' (D)' : ''}`;
         const posClass =
           pos === 'bottom'
@@ -35,12 +37,18 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             : pos === 'left'
             ? 'left-24 top-1/2 -translate-y-1/2'
             : 'right-24 top-1/2 -translate-y-1/2';
+        const bgColor =
+          isDeclarer
+            ? 'bg-yellow-500/80 text-emerald-950 ring-2 ring-yellow-400'
+            : isPartner
+            ? 'bg-cyan-600/80 text-white'
+            : isTurn
+            ? 'bg-amber-400 text-emerald-950'
+            : 'bg-emerald-950/70';
         return (
           <div key={s}>
             <div
-              className={`absolute ${posClass} text-xs font-medium px-2 py-1 rounded ${
-                isTurn ? 'bg-amber-400 text-emerald-950' : 'bg-emerald-950/70'
-              }`}
+              className={`absolute ${posClass} text-xs font-medium px-2 py-1 rounded ${bgColor}`}
             >
               {label} · {view.handCounts[s]} cards · won {view.tricksWonBy[s]}
             </div>

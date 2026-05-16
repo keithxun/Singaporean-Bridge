@@ -10,6 +10,7 @@ import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
 import { TurnIndicator } from '@/components/TurnIndicator';
 import type { Bid, Card, PlayerView, SeatIndex } from '@sgb/shared';
+import { isLegalPlay } from '@sgb/shared';
 
 interface Snapshot {
   code: string;
@@ -184,13 +185,14 @@ function GameUI({
         <div className="text-xs text-emerald-300 mb-1">Your hand</div>
         <div className="flex flex-wrap gap-1">
           {view.myHand.map((c, i) => {
-            const canPlay = view.phase === 'play' && view.turn === view.seat;
+            const isMyTurn = view.phase === 'play' && view.turn === view.seat;
+            const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick);
             return (
               <CardView
                 key={`${c.rank}${c.suit}${i}`}
                 card={c}
-                disabled={!canPlay}
-                onClick={canPlay ? () => onAction({ type: 'play', card: c }) : undefined}
+                disabled={!isLegal}
+                onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
               />
             );
           })}
