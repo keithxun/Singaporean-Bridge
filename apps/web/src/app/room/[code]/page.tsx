@@ -240,6 +240,17 @@ function GameUI({
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
+        {/* Contract Banner (Mobile) */}
+        {view.contract && (
+          <div className="lg:hidden bg-blue-900/60 border border-blue-600 rounded px-3 py-2 text-center">
+            <div className="text-xs text-blue-300">Contract</div>
+            <div className="text-sm font-bold text-blue-100">
+              {view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}
+              <span className="text-xs text-blue-300 ml-2">({6 + view.contract.level} tricks)</span>
+            </div>
+          </div>
+        )}
+
         {/* Table - Center piece */}
         <div className="flex-1 flex items-center justify-center min-h-0 px-1 md:px-2">
           <div className="w-full max-w-xs md:max-w-sm">
