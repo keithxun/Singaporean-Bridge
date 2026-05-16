@@ -222,32 +222,23 @@ function GameUI({
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
-        {/* Trump Display */}
-        {view.contract && (
-          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg px-4 py-2 text-center">
-            <div className="text-xs text-red-300 font-semibold mb-1">TRUMP</div>
-            <div className="text-3xl font-bold text-red-400">{TRUMP_LABEL[view.contract.trump]}</div>
-            <div className="text-xs text-red-200 mt-1">
-              {view.trumpBroken ? '✓ Broken' : '⚠ Not broken yet'}
-            </div>
-          </div>
-        )}
-
         {/* Table - Center piece */}
-        <div className="flex-1 flex items-center justify-center min-h-0">
-          <Table view={view} names={names} />
+        <div className="flex-1 flex items-center justify-center min-h-0 px-2">
+          <div className="w-full max-w-sm">
+            <Table view={view} names={names} />
+          </div>
         </div>
 
         {/* Hand Area - Compact */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded p-2">
-          <div className="text-xs text-slate-300 font-semibold mb-1">Your hand</div>
-          <div className="flex flex-wrap gap-1 justify-center">
+        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
+          <div className="text-xs text-slate-300 font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
+          <div className="flex flex-wrap gap-1.5 justify-center">
             {view.myHand.map((c, i) => {
               const isMyTurn = view.phase === 'play' && view.turn === view.seat;
               const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
               const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
               return (
-                <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded' : ''}>
+                <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
                   <CardView
                     card={c}
                     disabled={!isLegal}
@@ -270,34 +261,49 @@ function GameUI({
       </div>
 
       {/* Right: Info + Chat Sidebar */}
-      <div className="w-full lg:w-64 flex flex-col gap-3 min-w-0">
+      <div className="w-full lg:w-72 flex flex-col gap-2 min-w-0">
         {/* Contract Info */}
-        <div className="bg-blue-950/70 border border-blue-700 rounded p-2 text-xs">
-          <div className="font-semibold text-blue-300 mb-1">Phase & Contract</div>
-          <div className="text-blue-100 space-y-1">
-            <div>Phase: <span className="font-semibold">{view.phase}</span></div>
+        <div className="bg-blue-950/70 border border-blue-700 rounded-lg p-3 text-xs">
+          <div className="font-semibold text-blue-300 mb-2 text-sm">Phase & Contract</div>
+          <div className="text-blue-100 space-y-1.5">
+            <div>Phase: <span className="font-bold text-blue-300">{view.phase}</span></div>
             {view.contract && (
               <>
                 <div>
-                  Bid: {view.contract.level}
-                  {TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}
+                  <div className="text-blue-300 font-semibold">Bid</div>
+                  <div className="text-blue-100">{view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}</div>
                 </div>
                 <div>
-                  Partner: {view.contract.partnerCard.rank}
-                  {TRUMP_LABEL[view.contract.partnerCard.suit]}
-                  {view.partnerSeatRevealed !== undefined && ` (${names[view.partnerSeatRevealed]})`}
+                  <div className="text-blue-300 font-semibold">Partner</div>
+                  <div className="text-blue-100">{view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}{view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}</div>
                 </div>
               </>
             )}
           </div>
         </div>
 
+        {/* Trump Display */}
+        {view.contract && (
+          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg p-3 text-center">
+            <div className="text-xs text-red-300 font-semibold mb-1.5">TRUMP</div>
+            <div className="text-4xl font-bold text-red-400 mb-1">{TRUMP_LABEL[view.contract.trump]}</div>
+            <div className="text-xs font-semibold">
+              <span className={view.trumpBroken ? 'text-green-400' : 'text-yellow-400'}>
+                {view.trumpBroken ? '✓ Broken' : '⚠ Not broken'}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Scores */}
-        <div className="bg-purple-950/70 border border-purple-700 rounded p-2 text-xs">
-          <div className="font-semibold text-purple-300 mb-1">Scores</div>
-          <div className="text-purple-100 space-y-0.5">
+        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-3 text-xs">
+          <div className="font-semibold text-purple-300 mb-2 text-sm">Scores</div>
+          <div className="text-purple-100 space-y-1.5">
             {view.scores.map((score, i) => (
-              <div key={i}>{names[i]}: <span className="font-semibold">{score}</span></div>
+              <div key={i} className="flex justify-between items-center">
+                <span>{names[i]}</span>
+                <span className="font-bold text-lg text-purple-300">{score}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -306,9 +312,9 @@ function GameUI({
         {view.phase === 'scored' && (
           <button
             onClick={onNextDeal}
-            className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold rounded px-3 py-2 text-sm w-full"
+            className="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-amber-950 font-semibold rounded-lg px-4 py-3 text-sm w-full transition"
           >
-            Next deal
+            → Next deal
           </button>
         )}
 
