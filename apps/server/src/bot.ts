@@ -102,16 +102,21 @@ export function botPlay(
     return legal[Math.floor(Math.random() * legal.length)];
   }
 
-  // Smart: card counting, avoid wasting high cards if can't win trick
   const trick = view.currentTrick;
   const contract = view.contract;
-
-  // Count cards played to detect suit exhaustion
-  const playedCards = getPlayedCards(view);
-  const exhaustedSuits = getExhaustedSuits(playedCards);
+  const partnerConfirmed = view.partnerSeatRevealed !== undefined;
 
   if (!trick || trick.cards.length === 0) {
-    // Opening lead: lead high card from legal plays (respects trump breaking rule)
+    // Opening lead: try to feed partner if confirmed and out of a suit, otherwise lead high
+    if (partnerConfirmed) {
+      const partnerMissingSuits = getPartnerMissingSuits(view);
+      const feedSuits = legal.filter((c) => partnerMissingSuits.has(c.suit));
+      if (feedSuits.length > 0) {
+        // Lead a suit partner is missing (they can trump)
+        feedSuits.sort((a, b) => RANK_ORDER[b.rank] - RANK_ORDER[a.rank]);
+        return feedSuits[0];
+      }
+    }
     return leadCard(legal);
   }
 
@@ -124,8 +129,21 @@ export function botPlay(
     return suitCards[0];
   }
 
-  // Cannot follow suit
+  // Cannot follow suit: check if partner is winning
   const trickWinner = winnerOfTrick(trick, contract?.trump || 'NT');
+  const partnerIsWinning = partnerConfirmed && trickWinner === view.partnerSeatRevealed;
+  const hasHighestCard = trick.cards.some((t) => t.seat === trickWinner && t.card.rank === 'A');
+
+  if (partnerIsWinning && hasHighestCard) {
+    // Partner has highest card (likely to win): don't trump
+    const offSuit = legal.filter((c) => !contract || c.suit !== contract.trump);
+    if (offSuit.length > 0) {
+      offSuit.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
+      return offSuit[0];
+    }
+  }
+
+  // Normal trump logic: can we beat current winner?
   const canBeatCurrentWinner = contract && legal.some((c) =>
     c.suit === contract.trump && (RANK_ORDER[c.rank] > RANK_ORDER[trick.cards.find(t => t.seat === trickWinner)?.card.rank || '2'])
   );
@@ -134,16 +152,14 @@ export function botPlay(
   if (contract) {
     const trumpCards = legal.filter((c) => c.suit === contract.trump);
     if (trumpCards.length > 0) {
-      // Only trump if we can beat the current winning card, or if partner is not winning
-      if (canBeatCurrentWinner || trickWinner !== view.partnerSeatRevealed) {
-        // Can beat or should trump: play lowest trump to minimize loss
+      if (canBeatCurrentWinner || !partnerIsWinning) {
+        // Can beat or opponent is winning: play lowest trump
         trumpCards.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
         return trumpCards[0];
-      } else {
-        // Partner is winning and we can't beat, play off-suit if possible
+      } else if (partnerIsWinning) {
+        // Partner is winning: don't trump, play off-suit
         const offSuit = legal.filter((c) => c.suit !== contract.trump);
         if (offSuit.length > 0) {
-          // Play lowest card to minimize waste
           offSuit.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
           return offSuit[0];
         }
@@ -151,42 +167,39 @@ export function botPlay(
     }
   }
 
-  // Cannot follow suit and no trump available: play smallest card
+  // Fallback: play smallest card
   legal.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
   return legal[0];
 }
 
-// Track all cards that have been played
-function getPlayedCards(view: PlayerView): Card[] {
-  const played: Card[] = [];
-  // Add cards from completed tricks
-  for (const trick of view.tricks) {
-    for (const { card } of trick.cards) {
-      played.push(card);
-    }
-  }
-  // Add cards from current trick
-  if (view.currentTrick) {
-    for (const { card } of view.currentTrick.cards) {
-      played.push(card);
-    }
-  }
-  return played;
-}
+// Detect which suits the partner is out of (missing) by analyzing tricks
+function getPartnerMissingSuits(view: PlayerView): Set<string> {
+  const partnerSeat = view.partnerSeatRevealed;
+  if (partnerSeat === undefined) return new Set();
 
-// Detect which suits have all 13 cards played (suit exhaustion)
-function getExhaustedSuits(playedCards: Card[]): Set<string> {
-  const suitCounts = { S: 0, H: 0, D: 0, C: 0 };
-  for (const card of playedCards) {
-    suitCounts[card.suit as Exclude<Trump, 'NT'>]++;
-  }
-  const exhausted = new Set<string>();
-  for (const [suit, count] of Object.entries(suitCounts)) {
-    if (count === 13) {
-      exhausted.add(suit);
+  // Look through all tricks to find a suit partner couldn't follow
+  for (const trick of view.tricks) {
+    if (trick.cards.length === 0) continue;
+    const ledSuit = trick.cards[0].card.suit;
+
+    // Find what partner played in this trick
+    const partnerCard = trick.cards.find((t) => t.seat === partnerSeat);
+    if (partnerCard && partnerCard.card.suit !== ledSuit) {
+      // Partner didn't follow the led suit: they're out of it
+      return new Set([ledSuit]);
     }
   }
-  return exhausted;
+
+  // Check current trick
+  if (view.currentTrick && view.currentTrick.cards.length > 0) {
+    const ledSuit = view.currentTrick.cards[0].card.suit;
+    const partnerCard = view.currentTrick.cards.find((t) => t.seat === partnerSeat);
+    if (partnerCard && partnerCard.card.suit !== ledSuit) {
+      return new Set([ledSuit]);
+    }
+  }
+
+  return new Set();
 }
 
 function leadCard(hand: Card[]): Card {
