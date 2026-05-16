@@ -34,6 +34,13 @@ export interface Trick {
   winner?: SeatIndex;
 }
 
+export interface ChatMessage {
+  playerId: string;
+  name: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface GameState {
   phase: Phase;
   dealer: SeatIndex;

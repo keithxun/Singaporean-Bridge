@@ -3,6 +3,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import {
+  addChatMessage,
   applyAction,
   createRoom,
   getRoom,
@@ -108,6 +109,18 @@ io.on('connection', (socket) => {
       if (!joinedRoom || !joinedPlayerId) throw new Error('not in room');
       const room = getRoom(joinedRoom)!;
       applyAction(room, joinedPlayerId, action);
+      ack?.({ ok: true });
+      broadcast(room);
+    } catch (e: any) {
+      ack?.({ ok: false, error: e.message });
+    }
+  });
+
+  socket.on('chat:send', ({ text }, ack) => {
+    try {
+      if (!joinedRoom || !joinedPlayerId) throw new Error('not in room');
+      const room = getRoom(joinedRoom)!;
+      addChatMessage(room, joinedPlayerId, text);
       ack?.({ ok: true });
       broadcast(room);
     } catch (e: any) {

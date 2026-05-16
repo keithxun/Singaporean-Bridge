@@ -18,12 +18,20 @@ export interface Player {
   connected: boolean;
 }
 
+export interface ChatMessage {
+  playerId: string;
+  name: string;
+  text: string;
+  timestamp: number;
+}
+
 export interface Room {
   code: string;
   players: Map<string, Player>; // by playerId
   game?: GameState;
   dealerRotation: SeatIndex;
   createdAt: number;
+  messages: ChatMessage[]; // chat history
 }
 
 const rooms = new Map<string, Room>();
@@ -43,6 +51,7 @@ export function createRoom(): Room {
     players: new Map(),
     dealerRotation: 0,
     createdAt: Date.now(),
+    messages: [],
   };
   rooms.set(code, room);
   return room;
@@ -119,10 +128,25 @@ export function applyAction(
   }
 }
 
+export function addChatMessage(room: Room, playerId: string, text: string): void {
+  const player = room.players.get(playerId);
+  if (!player) throw new Error('unknown player');
+  const msg: ChatMessage = {
+    playerId,
+    name: player.name,
+    text: text.trim().slice(0, 200), // limit length
+    timestamp: Date.now(),
+  };
+  room.messages.push(msg);
+  // Keep only last 50 messages
+  if (room.messages.length > 50) room.messages.shift();
+}
+
 export interface RoomSnapshot {
   code: string;
   players: { playerId: string; name: string; seat?: SeatIndex; connected: boolean }[];
   view?: PlayerView;
+  messages: ChatMessage[];
 }
 
 export function snapshotFor(room: Room, playerId: string): RoomSnapshot {
@@ -134,5 +158,5 @@ export function snapshotFor(room: Room, playerId: string): RoomSnapshot {
   }));
   const seat = seatOfPlayer(room, playerId);
   const view = room.game && seat !== undefined ? viewFor(room.game, seat) : undefined;
-  return { code: room.code, players, view };
+  return { code: room.code, players, view, messages: room.messages };
 }

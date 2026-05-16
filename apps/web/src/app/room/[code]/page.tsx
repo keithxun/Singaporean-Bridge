@@ -9,13 +9,15 @@ import { Table } from '@/components/Table';
 import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
 import { TurnIndicator } from '@/components/TurnIndicator';
-import type { Bid, Card, PlayerView, SeatIndex } from '@sgb/shared';
+import { Chat } from '@/components/Chat';
+import type { Bid, Card, ChatMessage, PlayerView, SeatIndex } from '@sgb/shared';
 import { isLegalPlay } from '@sgb/shared';
 
 interface Snapshot {
   code: string;
   players: { playerId: string; name: string; seat?: SeatIndex; connected: boolean }[];
   view?: PlayerView;
+  messages: ChatMessage[];
 }
 
 const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
@@ -91,8 +93,10 @@ export default function RoomPage() {
         <GameUI
           view={view}
           names={names}
+          messages={snapshot.messages}
           onAction={(action) => emitAck('action', action)}
           onNextDeal={() => emitAck('game:nextDeal', {})}
+          onSendMessage={(text) => emitAck('chat:send', { text })}
         />
       )}
     </main>
@@ -148,13 +152,17 @@ function Lobby({
 function GameUI({
   view,
   names,
+  messages,
   onAction,
   onNextDeal,
+  onSendMessage,
 }: {
   view: PlayerView;
   names: Record<number, string>;
+  messages: ChatMessage[];
   onAction: (a: any) => void;
   onNextDeal: () => void;
+  onSendMessage: (text: string) => void;
 }) {
   return (
     <div className="space-y-4">
@@ -202,6 +210,8 @@ function GameUI({
       <div className="text-sm bg-emerald-950/70 rounded p-3">
         Scores · {view.scores.map((s, i) => `s${i}:${s}`).join(' · ')}
       </div>
+
+      <Chat messages={messages} onSendMessage={onSendMessage} />
 
       {view.phase === 'scored' && (
         <button onClick={onNextDeal} className="bg-emerald-500 text-emerald-950 font-semibold rounded px-4 py-2">
