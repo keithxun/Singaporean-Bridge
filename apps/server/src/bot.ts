@@ -9,30 +9,57 @@ import {
   type Trump,
 } from '@sgb/shared';
 
+// Standard bridge point count: A=4, K=3, Q=2, J=1
+function countPoints(hand: Card[]): number {
+  const pointMap: Record<string, number> = { A: 4, K: 3, Q: 2, J: 1 };
+  return hand.reduce((sum, card) => sum + (pointMap[card.rank] || 0), 0);
+}
+
+// Find best suit to bid (longest suit, or highest cards)
+function bestSuit(hand: Card[]): Trump {
+  const suitCounts = { S: 0, H: 0, D: 0, C: 0 };
+  const suitPoints = { S: 0, H: 0, D: 0, C: 0 };
+  for (const card of hand) {
+    suitCounts[card.suit as Exclude<Trump, 'NT'>]++;
+    const pointMap: Record<string, number> = { A: 4, K: 3, Q: 2, J: 1 };
+    suitPoints[card.suit as Exclude<Trump, 'NT'>] += pointMap[card.rank] || 0;
+  }
+  // Prefer longest suit; if tied, prefer suit with most points
+  const sorted = ['S', 'H', 'D', 'C'].sort(
+    (a, b) => suitCounts[b as Exclude<Trump, 'NT'>] - suitCounts[a as Exclude<Trump, 'NT'>] || suitPoints[b as Exclude<Trump, 'NT'>] - suitPoints[a as Exclude<Trump, 'NT'>]
+  );
+  return sorted[0] as Trump;
+}
+
 export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart'): Bid | 'pass' {
   const hand = view.myHand;
-  const jRank = 'J' as any as keyof typeof RANK_ORDER;
-  const highCards = hand.filter((c) => RANK_ORDER[c.rank as any as keyof typeof RANK_ORDER] >= RANK_ORDER[jRank]).length;
+  const points = countPoints(hand);
 
-  // If there's already a bid, must exceed it or pass
+  // If there's already a bid, decide whether to overcall
   if (view.highestBid) {
-    // Try to bid only if we have decent strength
-    if (highCards >= 3) {
-      const level = Math.min(view.highestBid.bid.level + 1, 7) as Bid['level'];
-      const trump: Trump[] = ['S', 'H', 'D', 'C', 'NT'];
-      return { level, trump: trump[Math.floor(Math.random() * trump.length)] };
+    const currentLevel = view.highestBid.bid.level;
+    // Need significant points to overcall: roughly 15+ for level 1, more for higher levels
+    const pointsNeeded = 15 + currentLevel * 3;
+    if (points >= pointsNeeded && currentLevel < 3) {
+      // Overcall at level + 1, but cap at level 3
+      const newLevel = Math.min(currentLevel + 1, 3) as Bid['level'];
+      return { level: newLevel, trump: bestSuit(hand) };
     }
     return 'pass';
   }
 
-  // Opening bid: be conservative
-  if (highCards >= 2) {
-    const level = Math.max(1, Math.min(highCards - 1, 7)) as Bid['level'];
-    const trump: Trump[] = ['S', 'H', 'D', 'C', 'NT'];
-    return { level, trump: trump[Math.floor(Math.random() * trump.length)] };
+  // Opening bid: 13+ points required to open, start with level 1
+  if (points < 13) {
+    return 'pass';
   }
 
-  return 'pass';
+  // Calculate bid level based on points: roughly level = (points - 13) / 4 + 1, but cap at 3
+  // 13-16 pts = level 1, 17-20 pts = level 2, 21+ pts = level 3
+  let level: Bid['level'] = 1;
+  if (points >= 21) level = 3;
+  else if (points >= 17) level = 2;
+
+  return { level, trump: bestSuit(hand) };
 }
 
 export function botCallPartner(hand: Card[]): Card {
