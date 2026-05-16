@@ -3,6 +3,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import {
+  addBot,
   addChatMessage,
   applyAction,
   createRoom,
@@ -14,6 +15,8 @@ import {
   takeSeat,
   type Room,
 } from './rooms.js';
+import { botBid, botCallPartner, botPlay } from './bot.js';
+import { viewFor, type GameState } from '@sgb/shared';
 
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
@@ -38,6 +41,42 @@ const io = new Server(httpServer, { cors: { origin: corsOrigin } });
 function broadcast(room: Room): void {
   for (const p of room.players.values()) {
     io.to(socketIdFor(p.playerId, room.code)).emit('room:state', snapshotFor(room, p.playerId));
+  }
+  // Schedule bot moves if it's a bot's turn
+  if (room.game && room.game.phase !== 'scored') {
+    const seat = room.game.turn;
+    const bot = Array.from(room.players.values()).find((p) => p.seat === seat && p.isBot);
+    if (bot) {
+      setTimeout(() => {
+        try {
+          playBotMove(room, bot.playerId);
+          broadcast(room);
+        } catch (e) {
+          console.error('bot move error:', e);
+        }
+      }, 1000 + Math.random() * 1000); // 1-2 sec delay for natural feel
+    }
+  }
+}
+
+function playBotMove(room: Room, botId: string): void {
+  if (!room.game) throw new Error('no game');
+  const bot = room.players.get(botId);
+  if (!bot || !bot.isBot) throw new Error('not a bot');
+  const seat = bot.seat;
+  if (seat === undefined) throw new Error('bot not seated');
+  const difficulty = bot.botDifficulty || 'smart';
+  const view = viewFor(room.game, seat);
+
+  if (room.game.phase === 'bidding') {
+    const action = botBid(view, difficulty);
+    applyAction(room, botId, { type: 'bid', bid: action });
+  } else if (room.game.phase === 'callPartner') {
+    const card = botCallPartner(view.myHand);
+    applyAction(room, botId, { type: 'callPartner', card });
+  } else if (room.game.phase === 'play') {
+    const card = botPlay(view, view.myHand, difficulty);
+    applyAction(room, botId, { type: 'play', card });
   }
 }
 
@@ -73,6 +112,18 @@ io.on('connection', (socket) => {
       if (!joinedRoom || !joinedPlayerId) throw new Error('not in room');
       const room = getRoom(joinedRoom)!;
       takeSeat(room, joinedPlayerId, seat);
+      ack?.({ ok: true });
+      broadcast(room);
+    } catch (e: any) {
+      ack?.({ ok: false, error: e.message });
+    }
+  });
+
+  socket.on('bot:add', ({ seat, difficulty }, ack) => {
+    try {
+      if (!joinedRoom) throw new Error('not in room');
+      const room = getRoom(joinedRoom)!;
+      addBot(room, seat, difficulty || 'smart');
       ack?.({ ok: true });
       broadcast(room);
     } catch (e: any) {

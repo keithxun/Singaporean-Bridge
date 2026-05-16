@@ -16,6 +16,8 @@ export interface Player {
   name: string;
   seat?: SeatIndex;
   connected: boolean;
+  isBot?: boolean;
+  botDifficulty?: 'smart' | 'random';
 }
 
 export interface ChatMessage {
@@ -81,6 +83,23 @@ export function takeSeat(room: Room, playerId: string, seat: SeatIndex): void {
     if (p.seat === seat && p.playerId !== playerId) throw new Error('seat taken');
   }
   player.seat = seat;
+}
+
+export function addBot(room: Room, seat: SeatIndex, difficulty: 'smart' | 'random' = 'smart'): void {
+  if (room.game) throw new Error('game already started');
+  for (const p of room.players.values()) {
+    if (p.seat === seat) throw new Error('seat taken');
+  }
+  const botId = `bot-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const bot: Player = {
+    playerId: botId,
+    name: `Bot (${difficulty})`,
+    seat,
+    connected: true,
+    isBot: true,
+    botDifficulty: difficulty,
+  };
+  room.players.set(botId, bot);
 }
 
 export function allSeated(room: Room): boolean {

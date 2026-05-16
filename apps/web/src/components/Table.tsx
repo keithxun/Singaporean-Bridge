@@ -13,7 +13,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
   const trick = view.currentTrick;
   const seats: SeatIndex[] = [0, 1, 2, 3];
   return (
-    <div className="relative w-full max-w-2xl aspect-square mx-auto bg-emerald-800/40 rounded-full border-4 border-emerald-700">
+    <div className="relative w-full max-w-sm md:max-w-2xl aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 md:border-4 border-emerald-700">
       {seats.map((s) => {
         const pos = relativePos(view.seat, s);
         const played = trick?.cards.find((c) => c.seat === s);
@@ -54,7 +54,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             </div>
             {played && (
               <div className={`absolute ${cardPosClass}`}>
-                <CardView card={played.card} disabled small />
+                <CardView card={played.card} disabled small animate />
               </div>
             )}
           </div>

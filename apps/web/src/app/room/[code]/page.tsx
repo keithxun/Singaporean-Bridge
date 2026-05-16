@@ -68,14 +68,14 @@ export default function RoomPage() {
   const view = snapshot.view;
 
   return (
-    <main className="min-h-screen p-4 space-y-4">
-      <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">
+    <main className="min-h-screen p-2 md:p-4 space-y-4">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <h1 className="text-2xl md:text-xl font-bold">
           Room <span className="tracking-widest">{code}</span>
         </h1>
         <button
           onClick={() => navigator.clipboard.writeText(shareUrl)}
-          className="text-xs bg-emerald-800 px-3 py-1 rounded"
+          className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded self-start md:self-auto"
         >
           Copy invite link
         </button>
@@ -88,6 +88,7 @@ export default function RoomPage() {
           onSeat={(seat) => emitAck('seat:take', { seat })}
           onStart={() => emitAck('game:start', {})}
           canStart={seatedCount === 4}
+          setError={setError}
         />
       ) : (
         <GameUI
@@ -109,13 +110,23 @@ function Lobby({
   onSeat,
   onStart,
   canStart,
+  setError,
 }: {
   mySeat: SeatIndex | undefined;
   players: Snapshot['players'];
   onSeat: (s: SeatIndex) => void;
   onStart: () => void;
   canStart: boolean;
+  setError: (msg: string | null) => void;
 }) {
+  const [botDifficulty, setBotDifficulty] = useState<'smart' | 'random'>('smart');
+
+  function handleAddBot(seat: SeatIndex) {
+    getSocket().emit('bot:add', { seat, difficulty: botDifficulty }, (resp: any) => {
+      if (!resp?.ok) setError(resp?.error ?? 'error adding bot');
+    });
+  }
+
   return (
     <div className="space-y-4">
       <p className="text-emerald-200 text-sm">Pick a seat. All 4 seats must be filled to start.</p>
@@ -123,28 +134,51 @@ function Lobby({
         {[0, 1, 2, 3].map((s) => {
           const taken = players.find((p) => p.seat === s);
           const mine = mySeat === s;
+          const isEmpty = !taken;
           return (
-            <button
-              key={s}
-              disabled={!!taken && !mine}
-              onClick={() => onSeat(s as SeatIndex)}
-              className={`p-4 rounded border ${
-                mine ? 'bg-emerald-500 text-emerald-950' : taken ? 'bg-emerald-800' : 'bg-emerald-900 hover:bg-emerald-700'
-              }`}
-            >
-              <div className="font-semibold">Seat {s}</div>
-              <div className="text-sm opacity-80">{taken?.name ?? 'empty'}</div>
-            </button>
+            <div key={s} className="space-y-1">
+              <button
+                disabled={!!taken && !mine}
+                onClick={() => onSeat(s as SeatIndex)}
+                className={`w-full p-3 rounded border ${
+                  mine ? 'bg-emerald-500 text-emerald-950' : taken ? 'bg-emerald-800' : 'bg-emerald-900 hover:bg-emerald-700'
+                }`}
+              >
+                <div className="font-semibold text-sm">Seat {s}</div>
+                <div className="text-xs opacity-80">{taken?.name ?? 'empty'}</div>
+              </button>
+              {isEmpty && !mine && (
+                <button
+                  onClick={() => handleAddBot(s as SeatIndex)}
+                  className="w-full text-xs bg-emerald-700 hover:bg-emerald-600 rounded px-2 py-1"
+                >
+                  + Bot
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
-      <button
-        disabled={!canStart}
-        onClick={onStart}
-        className="bg-amber-400 disabled:opacity-40 text-emerald-950 font-semibold rounded px-4 py-2"
-      >
-        Start game
-      </button>
+      <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-stretch">
+        <label className="flex items-center gap-2 text-xs flex-1">
+          <span className="text-emerald-300">Bot difficulty:</span>
+          <select
+            value={botDifficulty}
+            onChange={(e) => setBotDifficulty(e.target.value as 'smart' | 'random')}
+            className="bg-emerald-900 rounded px-2 py-1 flex-1"
+          >
+            <option value="smart">Smart</option>
+            <option value="random">Random</option>
+          </select>
+        </label>
+        <button
+          disabled={!canStart}
+          onClick={onStart}
+          className="bg-amber-400 disabled:opacity-40 text-emerald-950 font-semibold rounded px-4 py-2 text-sm md:text-base"
+        >
+          Start game
+        </button>
+      </div>
     </div>
   );
 }
@@ -190,8 +224,8 @@ function GameUI({
       )}
 
       <div>
-        <div className="text-xs text-emerald-300 mb-1">Your hand</div>
-        <div className="flex flex-wrap gap-1">
+        <div className="text-xs md:text-sm text-emerald-300 mb-2">Your hand</div>
+        <div className="flex flex-wrap gap-1 md:gap-2 justify-center md:justify-start">
           {view.myHand.map((c, i) => {
             const isMyTurn = view.phase === 'play' && view.turn === view.seat;
             const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick);

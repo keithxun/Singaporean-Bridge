@@ -14,20 +14,29 @@ export function CardView({
   onClick,
   disabled,
   small,
+  animate,
 }: {
   card: TCard;
   onClick?: () => void;
   disabled?: boolean;
   small?: boolean;
+  animate?: boolean;
 }) {
   const size = small ? 'w-10 h-14 text-sm' : 'w-14 h-20 text-lg';
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`${size} bg-white rounded shadow border ${SUIT_COLOR[card.suit]} flex flex-col items-center justify-center font-semibold transition ${
-        disabled ? 'opacity-50' : 'hover:-translate-y-1 cursor-pointer'
-      }`}
+      className={`${size} bg-white rounded shadow border ${SUIT_COLOR[card.suit]} flex flex-col items-center justify-center font-semibold transition-all ${
+        animate ? 'animate-slide-in' : ''
+      } ${disabled ? 'opacity-50' : 'hover:-translate-y-1 cursor-pointer'}`}
+      style={
+        animate
+          ? {
+              animation: 'slideIn 0.5s ease-out',
+            }
+          : undefined
+      }
     >
       <span>{card.rank === 'T' ? '10' : card.rank}</span>
       <span className="text-2xl leading-none">{SUIT_GLYPH[card.suit]}</span>
