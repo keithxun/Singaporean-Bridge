@@ -11,23 +11,35 @@ import {
 } from '@sgb/shared';
 
 // Standard bridge point count: A=4, K=3, Q=2, J=1
+// Plus distribution bonus: +1 point per long suit (5+ cards)
 function countPoints(hand: Card[]): number {
   const pointMap: Record<string, number> = { A: 4, K: 3, Q: 2, J: 1 };
-  return hand.reduce((sum, card) => sum + (pointMap[card.rank] || 0), 0);
+  let points = hand.reduce((sum, card) => sum + (pointMap[card.rank] || 0), 0);
+
+  // Add distribution bonus: +1 per long suit (5+ cards)
+  const suitCounts = { S: 0, H: 0, D: 0, C: 0 };
+  for (const card of hand) {
+    suitCounts[card.suit as Exclude<Trump, 'NT'>]++;
+  }
+  for (const count of Object.values(suitCounts)) {
+    if (count >= 5) points += 1;
+  }
+
+  return points;
 }
 
-// Find best suit to bid (longest suit, or highest cards)
+// Find best suit to bid: highest point value in any suit
 function bestSuit(hand: Card[]): Trump {
-  const suitCounts = { S: 0, H: 0, D: 0, C: 0 };
   const suitPoints = { S: 0, H: 0, D: 0, C: 0 };
+  const suitCounts = { S: 0, H: 0, D: 0, C: 0 };
   for (const card of hand) {
     suitCounts[card.suit as Exclude<Trump, 'NT'>]++;
     const pointMap: Record<string, number> = { A: 4, K: 3, Q: 2, J: 1 };
     suitPoints[card.suit as Exclude<Trump, 'NT'>] += pointMap[card.rank] || 0;
   }
-  // Prefer longest suit; if tied, prefer suit with most points
+  // Prefer suit with most points; if tied, prefer longest suit
   const sorted = ['S', 'H', 'D', 'C'].sort(
-    (a, b) => suitCounts[b as Exclude<Trump, 'NT'>] - suitCounts[a as Exclude<Trump, 'NT'>] || suitPoints[b as Exclude<Trump, 'NT'>] - suitPoints[a as Exclude<Trump, 'NT'>]
+    (a, b) => suitPoints[b as Exclude<Trump, 'NT'>] - suitPoints[a as Exclude<Trump, 'NT'>] || suitCounts[b as Exclude<Trump, 'NT'>] - suitCounts[a as Exclude<Trump, 'NT'>]
   );
   return sorted[0] as Trump;
 }
@@ -36,31 +48,32 @@ export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart
   const hand = view.myHand;
   const points = countPoints(hand);
 
+  // Calculate what bid level AI would make with its own points (opening bid thresholds)
+  function calculateBidLevel(pts: number): Bid['level'] | null {
+    if (pts >= 20) return 3;
+    if (pts >= 17) return 2;
+    if (pts >= 13) return 1;
+    return null;
+  }
+
+  const myBidLevel = calculateBidLevel(points);
+
   // If there's already a bid, decide whether to overcall
   if (view.highestBid) {
     const currentLevel = view.highestBid.bid.level;
-    // Need significant points to overcall: roughly 15+ for level 1, more for higher levels
-    const pointsNeeded = 15 + currentLevel * 3;
-    if (points >= pointsNeeded && currentLevel < 3) {
-      // Overcall at level + 1, but cap at level 3
-      const newLevel = Math.min(currentLevel + 1, 3) as Bid['level'];
-      return { level: newLevel, trump: bestSuit(hand) };
+    // Only outbid if my calculated level is higher than current bid
+    if (myBidLevel && myBidLevel > currentLevel) {
+      return { level: myBidLevel, trump: bestSuit(hand) };
     }
     return 'pass';
   }
 
-  // Opening bid: 13+ points required to open, start with level 1
-  if (points < 13) {
+  // Opening bid: bid if we have enough points
+  if (!myBidLevel) {
     return 'pass';
   }
 
-  // Calculate bid level based on points: roughly level = (points - 13) / 4 + 1, but cap at 3
-  // 13-16 pts = level 1, 17-20 pts = level 2, 21+ pts = level 3
-  let level: Bid['level'] = 1;
-  if (points >= 21) level = 3;
-  else if (points >= 17) level = 2;
-
-  return { level, trump: bestSuit(hand) };
+  return { level: myBidLevel, trump: bestSuit(hand) };
 }
 
 export function botCallPartner(hand: Card[]): Card {
