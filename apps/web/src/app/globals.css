@@ -2,11 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: auto;
+}
+
 html, body {
   height: 100%;
   background: #0b3d2e;
   color: #f3f4f6;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Prevent unwanted auto-scroll on mobile */
+*:focus {
+  scroll-margin: 0;
 }
 
 @keyframes slideIn {
