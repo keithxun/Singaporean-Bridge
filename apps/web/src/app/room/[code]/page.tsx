@@ -30,6 +30,12 @@ export default function RoomPage() {
   const [shareUrl, setShareUrl] = useState('');
 
   useEffect(() => {
+    if (!error) return;
+    const timeout = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(timeout);
+  }, [error]);
+
+  useEffect(() => {
     setShareUrl(typeof window !== 'undefined' ? window.location.href : '');
     const s = getSocket();
     const playerId = getPlayerId();
@@ -57,7 +63,18 @@ export default function RoomPage() {
     });
   }
 
-  if (error) return <div className="p-6 text-red-300">Error: {error}</div>;
+  if (error)
+    return (
+      <div className="p-6 bg-red-950/50 border border-red-700 rounded max-w-md space-y-3">
+        <div className="text-red-300">Error: {error}</div>
+        <button
+          onClick={() => setError(null)}
+          className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1 rounded"
+        >
+          Dismiss
+        </button>
+      </div>
+    );
   if (!snapshot) return <div className="p-6">Connecting…</div>;
 
   const mySeat = snapshot.players.find((p) => p.playerId === getPlayerId())?.seat;
@@ -250,12 +267,12 @@ function GameUI({
               <>
                 <div>
                   Bid: {view.contract.level}
-                  {TRUMP_LABEL[view.contract.trump]} by seat {view.contract.declarer}
+                  {TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}
                 </div>
                 <div>
                   Partner: {view.contract.partnerCard.rank}
                   {TRUMP_LABEL[view.contract.partnerCard.suit]}
-                  {view.partnerSeatRevealed !== undefined && ` (seat ${view.partnerSeatRevealed})`}
+                  {view.partnerSeatRevealed !== undefined && ` (${names[view.partnerSeatRevealed]})`}
                 </div>
               </>
             )}
@@ -267,7 +284,7 @@ function GameUI({
           <div className="font-semibold text-purple-300 mb-1">Scores</div>
           <div className="text-purple-100 space-y-0.5">
             {view.scores.map((score, i) => (
-              <div key={i}>Seat {i}: <span className="font-semibold">{score}</span></div>
+              <div key={i}>{names[i]}: <span className="font-semibold">{score}</span></div>
             ))}
           </div>
         </div>

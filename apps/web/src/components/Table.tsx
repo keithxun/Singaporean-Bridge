@@ -20,7 +20,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
         const isTurn = view.turn === s;
         const isDeclarer = view.contract?.declarer === s;
         const isPartner = view.contract && view.partnerSeatRevealed === s;
-        const label = `Seat ${s}${names[s] ? ` · ${names[s]}` : ''}${view.dealer === s ? ' (D)' : ''}`;
+        const label = `${names[s] || `Seat ${s}`}${view.dealer === s ? ' (D)' : ''}`;
         const posClass =
           pos === 'bottom'
             ? 'bottom-2 left-1/2 -translate-x-1/2'
@@ -43,7 +43,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             : isPartner
             ? 'bg-cyan-600/80 text-white'
             : isTurn
-            ? 'bg-amber-400 text-emerald-950'
+            ? 'bg-lime-400 text-emerald-950'
             : 'bg-emerald-950/70';
         return (
           <div key={s}>
