@@ -199,59 +199,94 @@ function GameUI({
   onSendMessage: (text: string) => void;
 }) {
   return (
-    <div className="space-y-4">
-      <div className="text-sm">
-        Phase: <span className="font-semibold">{view.phase}</span>
-        {view.contract && (
-          <span className="ml-3">
-            Contract: {view.contract.level}
-            {TRUMP_LABEL[view.contract.trump]} by seat {view.contract.declarer} · partner: {view.contract.partnerCard.rank}
-            {TRUMP_LABEL[view.contract.partnerCard.suit]}
-            {view.partnerSeatRevealed !== undefined && ` (seat ${view.partnerSeatRevealed})`}
-          </span>
+    <div className="flex flex-col lg:flex-row gap-3 h-full max-h-[calc(100vh-120px)]">
+      {/* Left: Table + Hand + Actions */}
+      <div className="flex-1 flex flex-col gap-3 min-w-0">
+        {/* Turn Indicator */}
+        <TurnIndicator view={view} names={names} />
+
+        {/* Table - Center piece */}
+        <div className="flex-1 flex items-center justify-center min-h-0">
+          <Table view={view} names={names} />
+        </div>
+
+        {/* Hand Area - Compact */}
+        <div className="bg-slate-800/60 border border-slate-700 rounded p-2">
+          <div className="text-xs text-slate-300 font-semibold mb-1">Your hand</div>
+          <div className="flex flex-wrap gap-1 justify-center">
+            {view.myHand.map((c, i) => {
+              const isMyTurn = view.phase === 'play' && view.turn === view.seat;
+              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick);
+              return (
+                <CardView
+                  key={`${c.rank}${c.suit}${i}`}
+                  card={c}
+                  disabled={!isLegal}
+                  small
+                  onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Panels - Bidding/Calling */}
+        {view.phase === 'bidding' && (
+          <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
+        )}
+        {view.phase === 'callPartner' && (
+          <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
         )}
       </div>
 
-      <TurnIndicator view={view} names={names} />
+      {/* Right: Info + Chat Sidebar */}
+      <div className="w-full lg:w-64 flex flex-col gap-3 min-w-0">
+        {/* Contract Info */}
+        <div className="bg-blue-950/70 border border-blue-700 rounded p-2 text-xs">
+          <div className="font-semibold text-blue-300 mb-1">Phase & Contract</div>
+          <div className="text-blue-100 space-y-1">
+            <div>Phase: <span className="font-semibold">{view.phase}</span></div>
+            {view.contract && (
+              <>
+                <div>
+                  Bid: {view.contract.level}
+                  {TRUMP_LABEL[view.contract.trump]} by seat {view.contract.declarer}
+                </div>
+                <div>
+                  Partner: {view.contract.partnerCard.rank}
+                  {TRUMP_LABEL[view.contract.partnerCard.suit]}
+                  {view.partnerSeatRevealed !== undefined && ` (seat ${view.partnerSeatRevealed})`}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
 
-      <Table view={view} names={names} />
+        {/* Scores */}
+        <div className="bg-purple-950/70 border border-purple-700 rounded p-2 text-xs">
+          <div className="font-semibold text-purple-300 mb-1">Scores</div>
+          <div className="text-purple-100 space-y-0.5">
+            {view.scores.map((score, i) => (
+              <div key={i}>Seat {i}: <span className="font-semibold">{score}</span></div>
+            ))}
+          </div>
+        </div>
 
-      {view.phase === 'bidding' && (
-        <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
-      )}
-      {view.phase === 'callPartner' && (
-        <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
-      )}
+        {/* Next Deal Button */}
+        {view.phase === 'scored' && (
+          <button
+            onClick={onNextDeal}
+            className="bg-amber-500 hover:bg-amber-400 text-amber-950 font-semibold rounded px-3 py-2 text-sm w-full"
+          >
+            Next deal
+          </button>
+        )}
 
-      <div>
-        <div className="text-xs md:text-sm text-emerald-300 mb-2">Your hand</div>
-        <div className="flex flex-wrap gap-1 md:gap-2 justify-center md:justify-start">
-          {view.myHand.map((c, i) => {
-            const isMyTurn = view.phase === 'play' && view.turn === view.seat;
-            const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick);
-            return (
-              <CardView
-                key={`${c.rank}${c.suit}${i}`}
-                card={c}
-                disabled={!isLegal}
-                onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
-              />
-            );
-          })}
+        {/* Chat - Bottom of sidebar */}
+        <div className="flex-1 min-h-0">
+          <Chat messages={messages} onSendMessage={onSendMessage} />
         </div>
       </div>
-
-      <div className="text-sm bg-emerald-950/70 rounded p-3">
-        Scores · {view.scores.map((s, i) => `s${i}:${s}`).join(' · ')}
-      </div>
-
-      <Chat messages={messages} onSendMessage={onSendMessage} />
-
-      {view.phase === 'scored' && (
-        <button onClick={onNextDeal} className="bg-emerald-500 text-emerald-950 font-semibold rounded px-4 py-2">
-          Next deal
-        </button>
-      )}
     </div>
   );
 }
