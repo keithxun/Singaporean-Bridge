@@ -25,6 +25,7 @@ export function startGame(dealer: SeatIndex = 0, seed?: number): GameState {
     tricks: [],
     tricksWonBy: [0, 0, 0, 0],
     scores: [0, 0, 0, 0],
+    trumpBroken: false,
   };
 }
 
@@ -85,7 +86,8 @@ export function playCard(state: GameState, seat: SeatIndex, card: Card): GameSta
   if (state.phase !== 'play') throw new Error('not in play phase');
   if (seat !== state.turn) throw new Error('not your turn');
   if (!state.contract) throw new Error('no contract');
-  if (!isLegalPlay(state.hands[seat], card, state.currentTrick)) throw new Error('illegal play');
+  if (!isLegalPlay(state.hands[seat], card, state.currentTrick, state.contract.trump, state.trumpBroken))
+    throw new Error('illegal play');
 
   const newHand = state.hands[seat].filter((c) => !cardEquals(c, card));
   const newHands = state.hands.map((h, i) => (i === seat ? newHand : h));
@@ -99,11 +101,17 @@ export function playCard(state: GameState, seat: SeatIndex, card: Card): GameSta
     partnerSeat = seat;
   }
 
+  let trumpBroken = state.trumpBroken;
+  if (state.contract.trump !== 'NT' && card.suit === state.contract.trump) {
+    trumpBroken = true;
+  }
+
   let next: GameState = {
     ...state,
     hands: newHands,
     currentTrick: updatedTrick,
     partnerSeat,
+    trumpBroken,
   };
 
   if (updatedTrick.cards.length === 4) {
@@ -171,6 +179,7 @@ export interface PlayerView {
   tricksWonBy: [number, number, number, number];
   scores: [number, number, number, number];
   lastCompletedTrick?: Trick;
+  trumpBroken: boolean;
 }
 
 export function viewFor(state: GameState, seat: SeatIndex): PlayerView {
@@ -189,5 +198,6 @@ export function viewFor(state: GameState, seat: SeatIndex): PlayerView {
     tricksWonBy: state.tricksWonBy,
     scores: state.scores,
     lastCompletedTrick: state.tricks[state.tricks.length - 1],
+    trumpBroken: state.trumpBroken,
   };
 }

@@ -222,6 +222,17 @@ function GameUI({
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
+        {/* Trump Display */}
+        {view.contract && (
+          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg px-4 py-2 text-center">
+            <div className="text-xs text-red-300 font-semibold mb-1">TRUMP</div>
+            <div className="text-3xl font-bold text-red-400">{TRUMP_LABEL[view.contract.trump]}</div>
+            <div className="text-xs text-red-200 mt-1">
+              {view.trumpBroken ? '✓ Broken' : '⚠ Not broken yet'}
+            </div>
+          </div>
+        )}
+
         {/* Table - Center piece */}
         <div className="flex-1 flex items-center justify-center min-h-0">
           <Table view={view} names={names} />
@@ -233,15 +244,17 @@ function GameUI({
           <div className="flex flex-wrap gap-1 justify-center">
             {view.myHand.map((c, i) => {
               const isMyTurn = view.phase === 'play' && view.turn === view.seat;
-              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick);
+              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
+              const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
               return (
-                <CardView
-                  key={`${c.rank}${c.suit}${i}`}
-                  card={c}
-                  disabled={!isLegal}
-                  small
-                  onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
-                />
+                <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded' : ''}>
+                  <CardView
+                    card={c}
+                    disabled={!isLegal}
+                    small
+                    onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
+                  />
+                </div>
               );
             })}
           </div>

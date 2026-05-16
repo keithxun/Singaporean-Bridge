@@ -36,6 +36,7 @@ export function RulesTab() {
         <ul className="list-disc list-inside space-y-1 text-emerald-100">
           <li>Opening lead: player left of declarer</li>
           <li>Must follow suit if able; otherwise any card</li>
+          <li><strong>Trump breaking:</strong> trump cannot be led until it has been played in a previous trick (unless you hold only trump)</li>
           <li>Highest trump (or highest of led suit) wins the trick</li>
           <li>Trick winner leads next</li>
         </ul>

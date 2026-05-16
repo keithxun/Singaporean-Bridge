@@ -32,9 +32,22 @@ export function canFollow(hand: Card[], ledSuit: string): boolean {
   return hand.some((c) => c.suit === ledSuit);
 }
 
-export function isLegalPlay(hand: Card[], card: Card, currentTrick: Trick | undefined): boolean {
+export function isLegalPlay(
+  hand: Card[],
+  card: Card,
+  currentTrick: Trick | undefined,
+  trump?: Trump,
+  trumpBroken?: boolean
+): boolean {
   if (!hand.some((c) => c.suit === card.suit && c.rank === card.rank)) return false;
-  if (!currentTrick || currentTrick.cards.length === 0) return true;
+  if (!currentTrick || currentTrick.cards.length === 0) {
+    // Opening lead: cannot lead trump unless broken or only have trump
+    if (trump && trump !== 'NT' && card.suit === trump && !trumpBroken) {
+      const hasNonTrump = hand.some((c) => c.suit !== trump);
+      if (hasNonTrump) return false;
+    }
+    return true;
+  }
   const ledSuit = currentTrick.cards[0].card.suit;
   if (card.suit === ledSuit) return true;
   return !canFollow(hand, ledSuit);

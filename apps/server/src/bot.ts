@@ -1,5 +1,6 @@
 import {
   canFollow,
+  isLegalPlay,
   RANK_ORDER,
   type Bid,
   type Card,
@@ -81,8 +82,8 @@ export function botPlay(
   hand: Card[],
   difficulty: 'random' | 'smart' = 'smart'
 ): Card {
-  // Find legal plays
-  const legal = legalPlays(hand, view.currentTrick);
+  // Find legal plays using proper isLegalPlay rules
+  const legal = hand.filter((c) => isLegalPlay(hand, c, view.currentTrick, view.contract?.trump, view.trumpBroken));
 
   if (difficulty === 'random' || legal.length === 1) {
     return legal[Math.floor(Math.random() * legal.length)];
@@ -123,16 +124,6 @@ export function botPlay(
   }
 
   return legal[0]; // fallback
-}
-
-function legalPlays(hand: Card[], currentTrick: any): Card[] {
-  if (!currentTrick || currentTrick.cards.length === 0) {
-    return hand;
-  }
-  const led = currentTrick.cards[0].card.suit;
-  const canFollowLed = hand.filter((c) => c.suit === led);
-  if (canFollowLed.length > 0) return canFollowLed;
-  return hand;
 }
 
 function leadCard(hand: Card[]): Card {

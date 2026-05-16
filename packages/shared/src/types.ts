@@ -55,4 +55,5 @@ export interface GameState {
   currentTrick?: Trick;
   tricksWonBy: [number, number, number, number]; // per seat
   scores: [number, number, number, number]; // running totals per seat
+  trumpBroken: boolean; // whether trump has been played in a trick
 }
