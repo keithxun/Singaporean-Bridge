@@ -21,7 +21,6 @@ export function BiddingPanel({
   const [trump, setTrump] = useState<Trump>('C');
   const myTurn = view.turn === view.seat;
   const points = countPoints(view.myHand);
-  const canBid = points >= 13;
   const isWash = points < 4;
 
   return (
@@ -70,7 +69,7 @@ export function BiddingPanel({
               </>
             )}
             <div className="flex gap-2 md:flex-row flex-col">
-              {!isWash && canBid && (
+              {!isWash && (
                 <button
                   onClick={() => onBid({ level, trump })}
                   className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold px-4 py-2 rounded text-sm"

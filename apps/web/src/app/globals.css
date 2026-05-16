@@ -2,21 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: auto;
-}
-
 html, body {
   height: 100%;
+  width: 100%;
   background: #0b3d2e;
   color: #f3f4f6;
   font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
-  overflow-x: hidden;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  -webkit-text-size-adjust: 100%;
+}
+
+html {
+  scroll-behavior: auto;
 }
 
 /* Prevent unwanted auto-scroll on mobile */
 *:focus {
   scroll-margin: 0;
+  scroll-margin-top: 0;
+  scroll-margin-bottom: 0;
+}
+
+input, textarea, select {
+  font-size: 16px;
 }
 
 @keyframes slideIn {
