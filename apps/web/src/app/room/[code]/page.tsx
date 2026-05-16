@@ -8,6 +8,7 @@ import { CardView } from '@/components/Card';
 import { Table } from '@/components/Table';
 import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
+import { TurnIndicator } from '@/components/TurnIndicator';
 import type { Bid, Card, PlayerView, SeatIndex } from '@sgb/shared';
 
 interface Snapshot {
@@ -167,6 +168,8 @@ function GameUI({
           </span>
         )}
       </div>
+
+      <TurnIndicator view={view} names={names} />
 
       <Table view={view} names={names} />
 

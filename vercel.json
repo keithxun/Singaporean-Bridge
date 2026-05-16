@@ -3,6 +3,5 @@
   "buildCommand": "npm run build -w @sgb/shared && npm run build -w @sgb/web",
   "installCommand": "npm install",
   "outputDirectory": "apps/web/.next",
-  "framework": "nextjs",
-  "ignoreCommand": "git diff --quiet HEAD^ HEAD -- apps/web packages/shared vercel.json package.json package-lock.json"
+  "framework": "nextjs"
 }
