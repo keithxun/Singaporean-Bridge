@@ -120,14 +120,20 @@ export default function RoomPage() {
           setError={setError}
         />
       ) : (
-        <GameUI
-          view={view}
-          names={names}
-          messages={snapshot.messages}
-          onAction={(action) => emitAck('action', action)}
-          onNextDeal={() => emitAck('game:nextDeal', {})}
-          onSendMessage={(text) => emitAck('chat:send', { text })}
-        />
+        <>
+          <GameUI
+            view={view}
+            names={names}
+            messages={snapshot.messages}
+            onAction={(action) => emitAck('action', action)}
+            onNextDeal={() => emitAck('game:nextDeal', {})}
+            onSendMessage={(text) => emitAck('chat:send', { text })}
+          />
+          {/* Mobile Chat Bar */}
+          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-emerald-950/95 border-t border-emerald-700 p-2">
+            <Chat messages={snapshot.messages} onSendMessage={(text) => emitAck('chat:send', { text })} />
+          </div>
+        </>
       )}
     </main>
   );
@@ -230,7 +236,7 @@ function GameUI({
   return (
     <div className="flex flex-col lg:flex-row gap-2 md:gap-3 h-full max-h-[calc(100vh-120px)]">
       {/* Left: Table + Hand + Actions */}
-      <div className="flex-1 flex flex-col gap-2 md:gap-3 min-w-0">
+      <div className="flex-1 flex flex-col gap-2 md:gap-3 min-w-0 pb-20 lg:pb-0">
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
@@ -241,35 +247,22 @@ function GameUI({
           </div>
         </div>
 
-        {/* Hand Area - Compact with suit grouping */}
+        {/* Hand Area - Compact */}
         <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-2 md:p-3">
           <div className="text-xs md:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
-          <div className="flex flex-col gap-2">
-            {SUIT_ORDER.map((suit) => {
-              const suitCards = sortCards(view.myHand).filter((c) => c.suit === suit);
-              if (suitCards.length === 0) return null;
-              const suitColors: Record<string, string> = { S: 'text-slate-900', H: 'text-red-600', D: 'text-red-600', C: 'text-slate-900' };
-              const bgColors: Record<string, string> = { S: 'bg-slate-700/30', H: 'bg-red-900/20', D: 'bg-orange-900/20', C: 'bg-emerald-900/20' };
+          <div className="flex flex-wrap gap-1 justify-center">
+            {sortCards(view.myHand).map((c, i) => {
+              const isMyTurn = view.phase === 'play' && view.turn === view.seat;
+              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
+              const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
               return (
-                <div key={suit} className={`flex items-center gap-2 ${bgColors[suit]} rounded px-2 py-1.5`}>
-                  <div className={`text-lg md:text-xl font-bold ${suitColors[suit]} w-6 flex-shrink-0`}>{TRUMP_LABEL[suit]}</div>
-                  <div className="flex gap-1 flex-wrap">
-                    {suitCards.map((c, i) => {
-                      const isMyTurn = view.phase === 'play' && view.turn === view.seat;
-                      const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
-                      const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
-                      return (
-                        <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
-                          <CardView
-                            card={c}
-                            disabled={!isLegal}
-                            small
-                            onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
+                  <CardView
+                    card={c}
+                    disabled={!isLegal}
+                    small
+                    onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
+                  />
                 </div>
               );
             })}
@@ -285,8 +278,8 @@ function GameUI({
         )}
       </div>
 
-      {/* Right: Info + Chat Sidebar */}
-      <div className="w-full lg:w-80 flex flex-col gap-2 min-h-0 lg:min-h-full">
+      {/* Right: Info + Chat Sidebar (desktop only) */}
+      <div className="hidden lg:flex w-80 flex-col gap-2 min-h-0 lg:min-h-full">
         {/* Contract Info */}
         <div className="bg-blue-950/70 border border-blue-700 rounded-lg p-2 md:p-3 text-xs">
           <div className="font-semibold text-blue-300 mb-2 text-sm">Phase & Contract</div>
