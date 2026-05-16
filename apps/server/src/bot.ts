@@ -11,15 +11,28 @@ import {
 
 export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart'): Bid | 'pass' {
   const hand = view.myHand;
-  // Simple: bid if hand has 2+ high cards, otherwise pass ~50% of the time
-  const highCards = hand.filter((c) => RANK_ORDER[c.rank] >= RANK_ORDER['J']).length;
-  if (highCards >= 2) {
-    // Guess a reasonable bid
-    const level = (Math.min(highCards, 7) as any) as Bid['level'];
-    const trump: Trump[] = ['S', 'H', 'D', 'C', 'NT'];
-    return { level: Math.max(1, level - 2) as Bid['level'], trump: trump[Math.floor(Math.random() * trump.length)] };
+  const jRank = 'J' as any as keyof typeof RANK_ORDER;
+  const highCards = hand.filter((c) => RANK_ORDER[c.rank as any as keyof typeof RANK_ORDER] >= RANK_ORDER[jRank]).length;
+
+  // If there's already a bid, must exceed it or pass
+  if (view.highestBid) {
+    // Try to bid only if we have decent strength
+    if (highCards >= 3) {
+      const level = Math.min(view.highestBid.bid.level + 1, 7) as Bid['level'];
+      const trump: Trump[] = ['S', 'H', 'D', 'C', 'NT'];
+      return { level, trump: trump[Math.floor(Math.random() * trump.length)] };
+    }
+    return 'pass';
   }
-  return Math.random() > 0.5 ? 'pass' : 'pass';
+
+  // Opening bid: be conservative
+  if (highCards >= 2) {
+    const level = Math.max(1, Math.min(highCards - 1, 7)) as Bid['level'];
+    const trump: Trump[] = ['S', 'H', 'D', 'C', 'NT'];
+    return { level, trump: trump[Math.floor(Math.random() * trump.length)] };
+  }
+
+  return 'pass';
 }
 
 export function botCallPartner(hand: Card[]): Card {

@@ -51,8 +51,8 @@ function broadcast(room: Room): void {
         try {
           playBotMove(room, bot.playerId);
           broadcast(room);
-        } catch (e) {
-          console.error('bot move error:', e);
+        } catch (e: any) {
+          console.error(`[${room.code}] bot move error for ${bot.name}:`, e?.message || e);
         }
       }, 1000 + Math.random() * 1000); // 1-2 sec delay for natural feel
     }
