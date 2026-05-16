@@ -93,8 +93,8 @@ export function botPlay(
   const trick = view.currentTrick;
   const contract = view.contract;
   if (!trick || trick.cards.length === 0) {
-    // Opening lead: lead high card of longest suit
-    return leadCard(hand);
+    // Opening lead: lead high card from legal plays (respects trump breaking rule)
+    return leadCard(legal);
   }
 
   const ledSuit = trick.cards[0].card.suit;
