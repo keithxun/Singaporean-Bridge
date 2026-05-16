@@ -253,7 +253,7 @@ function GameUI({
 
         {/* Table - Center piece */}
         <div className="flex-1 flex items-center justify-center min-h-0 px-1 md:px-2">
-          <div className="w-full max-w-xs md:max-w-sm">
+          <div className="w-full max-w-[240px] sm:max-w-xs md:max-w-sm">
             <Table view={view} names={names} />
           </div>
         </div>
