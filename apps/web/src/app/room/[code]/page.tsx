@@ -22,6 +22,17 @@ interface Snapshot {
 
 const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 
+const SUIT_ORDER = ['S', 'H', 'D', 'C'] as const;
+const RANK_ORDER = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'] as const;
+
+function sortCards(cards: Card[]): Card[] {
+  return [...cards].sort((a, b) => {
+    const suitDiff = SUIT_ORDER.indexOf(a.suit as any) - SUIT_ORDER.indexOf(b.suit as any);
+    if (suitDiff !== 0) return suitDiff;
+    return RANK_ORDER.indexOf(a.rank as any) - RANK_ORDER.indexOf(b.rank as any);
+  });
+}
+
 export default function RoomPage() {
   const params = useParams<{ code: string }>();
   const code = params.code.toUpperCase();
@@ -217,35 +228,48 @@ function GameUI({
   onSendMessage: (text: string) => void;
 }) {
   return (
-    <div className="flex flex-col lg:flex-row gap-3 h-full max-h-[calc(100vh-120px)]">
+    <div className="flex flex-col lg:flex-row gap-2 md:gap-3 h-full max-h-[calc(100vh-120px)]">
       {/* Left: Table + Hand + Actions */}
-      <div className="flex-1 flex flex-col gap-3 min-w-0">
+      <div className="flex-1 flex flex-col gap-2 md:gap-3 min-w-0">
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
         {/* Table - Center piece */}
-        <div className="flex-1 flex items-center justify-center min-h-0 px-2">
-          <div className="w-full max-w-sm">
+        <div className="flex-1 flex items-center justify-center min-h-0 px-1 md:px-2">
+          <div className="w-full max-w-xs md:max-w-sm">
             <Table view={view} names={names} />
           </div>
         </div>
 
-        {/* Hand Area - Compact */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
-          <div className="text-xs text-slate-300 font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
-          <div className="flex flex-wrap gap-1.5 justify-center">
-            {view.myHand.map((c, i) => {
-              const isMyTurn = view.phase === 'play' && view.turn === view.seat;
-              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
-              const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
+        {/* Hand Area - Compact with suit grouping */}
+        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-2 md:p-3">
+          <div className="text-xs md:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
+          <div className="flex flex-col gap-2">
+            {SUIT_ORDER.map((suit) => {
+              const suitCards = sortCards(view.myHand).filter((c) => c.suit === suit);
+              if (suitCards.length === 0) return null;
+              const suitColors: Record<string, string> = { S: 'text-slate-900', H: 'text-red-600', D: 'text-red-600', C: 'text-slate-900' };
+              const bgColors: Record<string, string> = { S: 'bg-slate-700/30', H: 'bg-red-900/20', D: 'bg-orange-900/20', C: 'bg-emerald-900/20' };
               return (
-                <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
-                  <CardView
-                    card={c}
-                    disabled={!isLegal}
-                    small
-                    onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
-                  />
+                <div key={suit} className={`flex items-center gap-2 ${bgColors[suit]} rounded px-2 py-1.5`}>
+                  <div className={`text-lg md:text-xl font-bold ${suitColors[suit]} w-6 flex-shrink-0`}>{TRUMP_LABEL[suit]}</div>
+                  <div className="flex gap-1 flex-wrap">
+                    {suitCards.map((c, i) => {
+                      const isMyTurn = view.phase === 'play' && view.turn === view.seat;
+                      const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
+                      const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
+                      return (
+                        <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
+                          <CardView
+                            card={c}
+                            disabled={!isLegal}
+                            small
+                            onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               );
             })}
@@ -262,11 +286,11 @@ function GameUI({
       </div>
 
       {/* Right: Info + Chat Sidebar */}
-      <div className="w-full lg:w-72 flex flex-col gap-2 min-w-0">
+      <div className="w-full lg:w-80 flex flex-col gap-2 min-h-0 lg:min-h-full">
         {/* Contract Info */}
-        <div className="bg-blue-950/70 border border-blue-700 rounded-lg p-3 text-xs">
+        <div className="bg-blue-950/70 border border-blue-700 rounded-lg p-2 md:p-3 text-xs">
           <div className="font-semibold text-blue-300 mb-2 text-sm">Phase & Contract</div>
-          <div className="text-blue-100 space-y-1.5">
+          <div className="text-blue-100 space-y-1.5 text-xs md:text-sm">
             <div>Phase: <span className="font-bold text-blue-300">{view.phase}</span></div>
             {view.contract && (
               <>
@@ -276,7 +300,7 @@ function GameUI({
                 </div>
                 <div>
                   <div className="text-blue-300 font-semibold">Partner</div>
-                  <div className="text-blue-100">{view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}{view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}</div>
+                  <div className="text-blue-100 text-xs">{view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}{view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}</div>
                 </div>
               </>
             )}
@@ -285,9 +309,9 @@ function GameUI({
 
         {/* Trump Display */}
         {view.contract && (
-          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg p-3 text-center">
-            <div className="text-xs text-red-300 font-semibold mb-1.5">TRUMP</div>
-            <div className="text-4xl font-bold text-red-400 mb-1">{TRUMP_LABEL[view.contract.trump]}</div>
+          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg p-2 md:p-3 text-center">
+            <div className="text-xs text-red-300 font-semibold mb-1">TRUMP</div>
+            <div className="text-3xl md:text-4xl font-bold text-red-400 mb-1">{TRUMP_LABEL[view.contract.trump]}</div>
             <div className="text-xs font-semibold">
               <span className={view.trumpBroken ? 'text-green-400' : 'text-yellow-400'}>
                 {view.trumpBroken ? '✓ Broken' : '⚠ Not broken'}
@@ -297,13 +321,13 @@ function GameUI({
         )}
 
         {/* Scores */}
-        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-3 text-xs">
+        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-2 md:p-3 text-xs">
           <div className="font-semibold text-purple-300 mb-2 text-sm">Scores</div>
-          <div className="text-purple-100 space-y-1.5">
+          <div className="text-purple-100 space-y-1 md:space-y-1.5 text-xs md:text-sm">
             {view.scores.map((score, i) => (
               <div key={i} className="flex justify-between items-center">
-                <span>{names[i]}</span>
-                <span className="font-bold text-lg text-purple-300">{score}</span>
+                <span className="truncate">{names[i]}</span>
+                <span className="font-bold text-purple-300 ml-2">{score}</span>
               </div>
             ))}
           </div>
@@ -313,14 +337,14 @@ function GameUI({
         {view.phase === 'scored' && (
           <button
             onClick={onNextDeal}
-            className="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-amber-950 font-semibold rounded-lg px-4 py-3 text-sm w-full transition"
+            className="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-amber-950 font-semibold rounded-lg px-3 py-2 md:px-4 md:py-3 text-sm w-full transition flex-shrink-0"
           >
             → Next deal
           </button>
         )}
 
         {/* Chat - Bottom of sidebar */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <Chat messages={messages} onSendMessage={onSendMessage} />
         </div>
       </div>

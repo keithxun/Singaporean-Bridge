@@ -22,7 +22,7 @@ export function CardView({
   small?: boolean;
   animate?: boolean;
 }) {
-  const size = small ? 'w-10 h-14 text-sm' : 'w-14 h-20 text-lg';
+  const size = small ? 'w-11 h-16 md:w-10 md:h-14 text-xs md:text-sm' : 'w-14 h-20 text-lg';
   return (
     <button
       onClick={onClick}

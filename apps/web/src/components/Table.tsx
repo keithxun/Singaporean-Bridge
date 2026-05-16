@@ -53,9 +53,9 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
         return (
           <div key={s}>
             <div
-              className={`absolute ${posClass} text-xs font-semibold px-2 py-1.5 rounded-md shadow-md ${bgColor}`}
+              className={`absolute ${posClass} text-xs md:text-sm font-semibold px-2 py-1.5 rounded-md shadow-md ${bgColor}`}
             >
-              <div>{label}</div>
+              <div className="text-xs md:text-sm">{label}</div>
               <div className="text-xs opacity-90">{view.handCounts[s]}🂠 {view.tricksWonBy[s]}✓</div>
             </div>
             {played && (
