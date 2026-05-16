@@ -39,6 +39,7 @@ export default function RoomPage() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
+  const [showStats, setShowStats] = useState(false);
 
   useEffect(() => {
     if (!error) return;
@@ -102,13 +103,40 @@ export default function RoomPage() {
         <h1 className="text-2xl md:text-xl font-bold">
           Room <span className="tracking-widest">{code}</span>
         </h1>
-        <button
-          onClick={() => navigator.clipboard.writeText(shareUrl)}
-          className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded self-start md:self-auto"
-        >
-          Copy invite link
-        </button>
+        <div className="flex gap-2 self-start md:self-auto">
+          {view && (
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className={`text-xs px-3 py-2 rounded font-semibold transition ${
+                showStats ? 'bg-purple-600 text-white' : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200'
+              }`}
+            >
+              📊 Stats
+            </button>
+          )}
+          <button
+            onClick={() => navigator.clipboard.writeText(shareUrl)}
+            className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded"
+          >
+            Copy invite link
+          </button>
+        </div>
       </header>
+
+      {/* Stats Panel */}
+      {showStats && view && (
+        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-3 text-xs">
+          <div className="font-semibold text-purple-300 mb-2 text-sm">Room Scores</div>
+          <div className="text-purple-100 space-y-1.5">
+            {view.scores.map((score, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <span>{names[i]}</span>
+                <span className="font-bold text-lg text-purple-300">{score}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {!view ? (
         <Lobby
