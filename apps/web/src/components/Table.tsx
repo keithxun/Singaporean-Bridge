@@ -11,15 +11,18 @@ function relativePos(mySeat: SeatIndex, seat: SeatIndex) {
 
 export function Table({ view, names }: { view: PlayerView; names: Record<number, string> }) {
   const trick = view.currentTrick;
+  const lastTrick = view.lastCompletedTrick;
+  const displayTrick = trick && trick.cards.length > 0 ? trick : lastTrick;
   const seats: SeatIndex[] = [0, 1, 2, 3];
   return (
     <div className="relative w-full aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700 shadow-lg">
       {seats.map((s) => {
         const pos = relativePos(view.seat, s);
-        const played = trick?.cards.find((c) => c.seat === s);
+        const played = displayTrick?.cards.find((c) => c.seat === s);
         const isTurn = view.turn === s;
         const isDeclarer = view.contract?.declarer === s;
         const isPartner = view.contract && view.partnerSeatRevealed === s;
+        const isWinner = displayTrick?.winner === s;
         const label = `${names[s] || `Seat ${s}`}${view.dealer === s ? ' (D)' : ''}`;
         const posClass =
           pos === 'bottom'
@@ -38,7 +41,9 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             ? 'left-24 top-1/2 -translate-y-1/2'
             : 'right-24 top-1/2 -translate-y-1/2';
         const bgColor =
-          isDeclarer
+          isWinner
+            ? 'bg-orange-400/80 text-emerald-950 ring-2 ring-orange-300'
+            : isDeclarer
             ? 'bg-yellow-500/80 text-emerald-950 ring-2 ring-yellow-400'
             : isPartner
             ? 'bg-cyan-600/80 text-white'

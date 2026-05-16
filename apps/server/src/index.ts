@@ -159,9 +159,13 @@ io.on('connection', (socket) => {
     try {
       if (!joinedRoom || !joinedPlayerId) throw new Error('not in room');
       const room = getRoom(joinedRoom)!;
+      const prevTricksCount = room.game?.tricks.length ?? 0;
       applyAction(room, joinedPlayerId, action);
       ack?.({ ok: true });
-      broadcast(room);
+      const currTricksCount = room.game?.tricks.length ?? 0;
+      // If a trick just completed, delay broadcast to show the completed trick
+      const delay = currTricksCount > prevTricksCount ? 1500 : 0;
+      setTimeout(() => broadcast(room), delay);
     } catch (e: any) {
       ack?.({ ok: false, error: e.message });
     }
