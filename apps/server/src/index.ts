@@ -72,7 +72,7 @@ function playBotMove(room: Room, botId: string): void {
     const action = botBid(view, difficulty);
     applyAction(room, botId, { type: 'bid', bid: action });
   } else if (room.game.phase === 'callPartner') {
-    const card = botCallPartner(view.myHand);
+    const card = botCallPartner(view.myHand, view.contract?.trump);
     applyAction(room, botId, { type: 'callPartner', card });
   } else if (room.game.phase === 'play') {
     const card = botPlay(view, view.myHand, difficulty);

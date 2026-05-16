@@ -76,11 +76,23 @@ export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart
   return { level: myBidLevel, trump: bestSuit(hand) };
 }
 
-export function botCallPartner(hand: Card[]): Card {
-  // Pick a random card not in hand
+export function botCallPartner(hand: Card[], trumpSuit?: string): Card {
+  // Call the highest trump suit card that AI doesn't have
+  const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'] as const;
+
+  if (trumpSuit && trumpSuit !== 'NT') {
+    // Find highest trump card not in hand
+    for (const rank of RANKS) {
+      const card: Card = { suit: trumpSuit as any, rank };
+      if (!hand.some((h) => h.suit === card.suit && h.rank === card.rank)) {
+        return card; // Return highest trump not in hand
+      }
+    }
+  }
+
+  // Fallback: pick a random card not in hand (if trump is NT or all trumps are in hand)
   const allCards: Card[] = [];
   const SUITS = ['C', 'D', 'H', 'S'] as const;
-  const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
   for (const suit of SUITS) {
     for (const rank of RANKS) {
       allCards.push({ suit, rank });
