@@ -28,3 +28,28 @@ html, body {
     opacity: 0;
   }
 }
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-out {
+    animation: fadeInOut 2s ease-in-out forwards;
+  }
+}

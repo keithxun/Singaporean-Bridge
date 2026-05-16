@@ -31,7 +31,7 @@ export default function RoomPage() {
 
   useEffect(() => {
     if (!error) return;
-    const timeout = setTimeout(() => setError(null), 5000);
+    const timeout = setTimeout(() => setError(null), 2000);
     return () => clearTimeout(timeout);
   }, [error]);
 
@@ -63,19 +63,13 @@ export default function RoomPage() {
     });
   }
 
-  if (error)
+  if (!snapshot)
     return (
-      <div className="p-6 bg-red-950/50 border border-red-700 rounded max-w-md space-y-3">
-        <div className="text-red-300">Error: {error}</div>
-        <button
-          onClick={() => setError(null)}
-          className="text-xs bg-red-800 hover:bg-red-700 px-3 py-1 rounded"
-        >
-          Dismiss
-        </button>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-emerald-700 border-t-emerald-400 rounded-full animate-spin"></div>
+        <div className="text-emerald-300 font-semibold">Connecting to room {code}…</div>
       </div>
     );
-  if (!snapshot) return <div className="p-6">Connecting…</div>;
 
   const mySeat = snapshot.players.find((p) => p.playerId === getPlayerId())?.seat;
   const seatedCount = new Set(snapshot.players.map((p) => p.seat).filter((s) => s !== undefined)).size;
@@ -86,6 +80,13 @@ export default function RoomPage() {
 
   return (
     <main className="min-h-screen p-2 md:p-4 space-y-4">
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
+          ⚠️ {error}
+        </div>
+      )}
+
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <h1 className="text-2xl md:text-xl font-bold">
           Room <span className="tracking-widest">{code}</span>
