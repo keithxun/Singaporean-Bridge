@@ -105,7 +105,7 @@ export default function RoomPage() {
 
     function joinRoomWithRetry() {
       s.emit('room:join', { code, playerId, name }, (resp: AckResponse) => {
-        if (!resp.ok) setError(resp.error);
+        if (!resp.ok) setError(resp.error || 'error');
         else {
           setSnapshot(resp.snapshot);
           setNeedsName(false);
