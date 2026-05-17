@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, Fragment } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { getName, getPlayerId, setName } from '@/lib/identity';
 import { getSocket } from '@/lib/socket';
 import { CardView } from '@/components/Card';
@@ -35,19 +35,50 @@ function sortCards(cards: Card[]): Card[] {
 
 export default function RoomPage() {
   const params = useParams<{ code: string }>();
+  const searchParams = useSearchParams();
   const code = params.code.toUpperCase();
+  const isQuickStart = searchParams.get('quickstart') === 'true';
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [namePrompt, setNamePrompt] = useState('');
   const [needsName, setNeedsName] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [botsAdded, setBotsAdded] = useState(false);
 
   useEffect(() => {
     if (!error) return;
     const timeout = setTimeout(() => setError(null), 2000);
     return () => clearTimeout(timeout);
   }, [error]);
+
+  // Handle quickstart: auto-add bots and start game
+  useEffect(() => {
+    if (!isQuickStart || !snapshot || botsAdded || snapshot.view) return;
+
+    const userSeat = snapshot.players.find((p) => p.playerId === getPlayerId())?.seat;
+    if (userSeat === undefined) {
+      // User not yet seated, seat them in slot 0
+      getSocket().emit('seat:take', { seat: 0 }, (resp: any) => {
+        if (resp?.ok) {
+          // Now add 3 bots to other seats
+          setTimeout(() => {
+            getSocket().emit('bot:add', { seat: 1, difficulty: 'smart' }, () => {
+              getSocket().emit('bot:add', { seat: 2, difficulty: 'smart' }, () => {
+                getSocket().emit('bot:add', { seat: 3, difficulty: 'smart' }, () => {
+                  // Start game after all bots added
+                  setTimeout(() => {
+                    getSocket().emit('game:start', {}, () => {});
+                  }, 500);
+                });
+              });
+            });
+          }, 500);
+        }
+      });
+      setBotsAdded(true);
+    }
+  }, [isQuickStart, snapshot, botsAdded]);
 
   useEffect(() => {
     setShareUrl(typeof window !== 'undefined' ? window.location.href : '');

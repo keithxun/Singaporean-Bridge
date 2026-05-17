@@ -36,12 +36,6 @@ export function MyPlayerCard({ view, name, displayTrick, tricksWon, score }: { v
           </div>
         </div>
       </div>
-      {/* Show card played this round */}
-      {myPlayedCard && view.phase === 'play' && (
-        <div className="flex justify-center">
-          <CardView card={myPlayedCard.card} disabled small />
-        </div>
-      )}
     </div>
   );
 }

@@ -44,6 +44,23 @@ export default function Home() {
     router.push(`/room/${code.trim().toUpperCase()}`);
   }
 
+  async function quickStartWithBots() {
+    const testName = 'Tester';
+    setBusy(true);
+    setError(null);
+    try {
+      setName(testName);
+      setServerUrl(server.trim());
+      const res = await fetch(`${server.trim()}/rooms`, { method: 'POST' });
+      const { code } = await res.json();
+      router.push(`/room/${code}?quickstart=true`);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
@@ -82,6 +99,15 @@ export default function Home() {
             className="w-full bg-white text-ink border-3 border-wood-dark font-bold rounded py-3 hover:bg-panel transition disabled:opacity-50"
           >
             Create Room
+          </button>
+
+          {/* Quick Start Button */}
+          <button
+            disabled={busy}
+            onClick={quickStartWithBots}
+            className="w-full bg-gold text-ink border-3 border-wood-dark font-bold rounded py-3 hover:bg-yellow-400 transition disabled:opacity-50"
+          >
+            Quick Test (3 Bots)
           </button>
 
           {/* Join Room Section */}
