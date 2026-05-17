@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { getName, getPlayerId } from '@/lib/identity';
+import { getName, getPlayerId, setName } from '@/lib/identity';
 import { getSocket } from '@/lib/socket';
 import { CardView } from '@/components/Card';
 import { Table } from '@/components/Table';
