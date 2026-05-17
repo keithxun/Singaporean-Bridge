@@ -323,7 +323,7 @@ function GameUI({
   return (
     <div className="flex flex-col lg:flex-row gap-2 md:gap-3 h-full max-h-[calc(100vh-120px)]">
       {/* Left: Table + Hand + Actions */}
-      <div className="flex-1 flex flex-col gap-2 md:gap-3 min-w-0 pb-40 lg:pb-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col gap-2 md:gap-3 min-w-0 min-h-0 pb-40 lg:pb-0 overflow-y-auto">
         {/* Turn Indicator */}
         <TurnIndicator view={view} names={names} />
 
