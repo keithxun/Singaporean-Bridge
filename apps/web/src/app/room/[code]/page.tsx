@@ -413,15 +413,15 @@ function GameUI({
         )}
       </div>
 
-      {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t-2 border-wood-dark px-1 md:px-2 py-1 md:py-2 flex gap-1 md:gap-2 flex-shrink-0 items-stretch">
+      {/* Desktop: My Player Card + Action Panel Row */}
+      <div className="hidden md:flex bg-wood-light border-t-2 border-wood-dark px-2 py-2 gap-2 flex-shrink-0 items-stretch">
         {/* Player Profile Card */}
-        <div className="w-full md:w-1/3 flex-shrink-0 min-w-0">
+        <div className="w-1/3 flex-shrink-0 min-w-0">
           <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
         </div>
 
         {/* Action Panel + Toggles */}
-        <div className="hidden md:flex flex-1 min-w-0 flex-col gap-1">
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
           {/* Chat Toggle */}
           <button
             onClick={() => setShowChat(!showChat)}
@@ -451,16 +451,42 @@ function GameUI({
             )}
           </div>
         </div>
+      </div>
 
-        {/* Mobile Action Panel - shown at bottom on mobile */}
-        <div className="md:hidden flex flex-col gap-1 w-auto">
+      {/* Mobile: Player Card */}
+      <div className="md:hidden bg-wood-light border-t-2 border-wood-dark px-1 py-1 flex-shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
+          </div>
           <button
             onClick={() => setShowChat(!showChat)}
-            className="text-xs font-semibold rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold hover:text-ink transition"
+            className="text-lg rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold transition flex-shrink-0"
           >
             💬
           </button>
         </div>
+      </div>
+
+      {/* Mobile: Action Panel below player card */}
+      <div className="md:hidden bg-panel border-t-2 border-wood-dark px-2 py-2 flex-shrink-0 overflow-y-auto">
+        {view.phase === 'bidding' && (
+          <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
+        )}
+        {view.phase === 'callPartner' && (
+          <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
+        )}
+        {view.phase === 'play' && (
+          <ContractInfo view={view} names={names} />
+        )}
+        {view.phase === 'scored' && (
+          <button
+            onClick={onNextDeal}
+            className="w-full bg-gold hover:bg-yellow-500 text-ink font-semibold rounded px-3 py-2 border-2 border-wood-dark transition"
+          >
+            Next deal
+          </button>
+        )}
       </div>
 
       {/* Hand Area */}
