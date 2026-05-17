@@ -141,12 +141,12 @@ export default function RoomPage() {
   // Name prompt modal
   if (needsName) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
-        <div className="bg-emerald-950/60 border border-emerald-800 rounded-2xl p-8 w-full max-w-md space-y-4">
-          <h1 className="text-2xl font-bold">Join Room {code}</h1>
-          <p className="text-emerald-200 text-sm">Enter your name to join</p>
+      <div className="min-h-screen bg-felt flex flex-col items-center justify-center gap-4 p-4">
+        <div className="bg-felt border-2 border-wood-dark rounded-2xl p-8 w-full max-w-md space-y-4">
+          <h1 className="text-2xl font-bold text-panel">Join Room {code}</h1>
+          <p className="text-panel/70 text-sm">Enter your name to join</p>
           <input
-            className="w-full bg-emerald-900 border border-emerald-700 rounded px-3 py-2"
+            className="w-full bg-panel border-2 border-wood-dark rounded px-3 py-2 text-ink placeholder-ink/40"
             value={namePrompt}
             onChange={(e) => setNamePrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
@@ -155,7 +155,7 @@ export default function RoomPage() {
           />
           <button
             onClick={handleNameSubmit}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-semibold rounded py-2"
+            className="w-full bg-wood-light hover:bg-wood text-ink font-semibold rounded py-2 border-2 border-wood-dark transition"
           >
             Join
           </button>
@@ -167,9 +167,9 @@ export default function RoomPage() {
 
   if (!snapshot)
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 border-4 border-emerald-700 border-t-emerald-400 rounded-full animate-spin"></div>
-        <div className="text-emerald-300 font-semibold">Connecting to room {code}…</div>
+      <div className="min-h-screen bg-felt flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-wood-light border-t-gold rounded-full animate-spin"></div>
+        <div className="text-panel font-semibold">Connecting to room {code}…</div>
       </div>
     );
 
@@ -261,7 +261,7 @@ function Lobby({
 
   return (
     <div className="space-y-4">
-      <p className="text-emerald-200 text-sm">Pick a seat. All 4 seats must be filled to start.</p>
+      <p className="text-panel text-sm">Pick a seat. All 4 seats must be filled to start.</p>
       <div className="grid grid-cols-2 gap-3 max-w-md">
         {[0, 1, 2, 3].map((s) => {
           const taken = players.find((p) => p.seat === s);
@@ -272,8 +272,8 @@ function Lobby({
               <button
                 disabled={!!taken && !mine}
                 onClick={() => onSeat(s as SeatIndex)}
-                className={`w-full p-3 rounded border ${
-                  mine ? 'bg-emerald-500 text-emerald-950' : taken ? 'bg-emerald-800' : 'bg-emerald-900 hover:bg-emerald-700'
+                className={`w-full p-3 rounded border-2 transition ${
+                  mine ? 'bg-gold text-ink border-wood-dark' : taken ? 'bg-wood text-panel border-wood-dark' : 'bg-wood-light text-ink hover:bg-wood border-wood-dark'
                 }`}
               >
                 <div className="font-semibold text-sm">Seat {s}</div>
@@ -282,7 +282,7 @@ function Lobby({
               {isEmpty && !mine && (
                 <button
                   onClick={() => handleAddBot(s as SeatIndex)}
-                  className="w-full text-xs bg-emerald-700 hover:bg-emerald-600 rounded px-2 py-1"
+                  className="w-full text-xs bg-panel hover:bg-wood-light text-ink rounded px-2 py-1 border border-wood-dark transition"
                 >
                   + Bot
                 </button>
@@ -293,11 +293,11 @@ function Lobby({
       </div>
       <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-stretch">
         <label className="flex items-center gap-2 text-xs flex-1">
-          <span className="text-emerald-300">Bot difficulty:</span>
+          <span className="text-panel">Bot difficulty:</span>
           <select
             value={botDifficulty}
             onChange={(e) => setBotDifficulty(e.target.value as 'smart' | 'random')}
-            className="bg-emerald-900 rounded px-2 py-1 flex-1"
+            className="bg-panel text-ink border border-wood-dark rounded px-2 py-1 flex-1"
           >
             <option value="smart">Smart</option>
             <option value="random">Random</option>
@@ -306,7 +306,7 @@ function Lobby({
         <button
           disabled={!canStart}
           onClick={onStart}
-          className="bg-amber-400 disabled:opacity-40 text-emerald-950 font-semibold rounded px-4 py-2 text-sm md:text-base"
+          className="bg-gold disabled:opacity-40 text-ink font-semibold rounded px-4 py-2 text-sm md:text-base border-2 border-wood-dark transition hover:bg-yellow-500"
         >
           Start game
         </button>
