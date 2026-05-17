@@ -154,13 +154,13 @@ export default function RoomPage() {
     <main className="min-h-screen p-2 md:p-4 space-y-4">
       {/* Error Toast */}
       {error && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-600 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
           ⚠️ {error}
         </div>
       )}
 
       <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <h1 className="text-2xl md:text-xl font-bold">
+        <h1 className="text-2xl md:text-xl font-bold text-ink">
           Room <span className="tracking-widest">{code}</span>
         </h1>
         <div className="flex gap-2 self-start md:self-auto">
@@ -168,7 +168,7 @@ export default function RoomPage() {
             <button
               onClick={() => setShowStats(!showStats)}
               className={`text-xs px-3 py-2 rounded font-semibold transition ${
-                showStats ? 'bg-purple-600 text-white' : 'bg-emerald-800 hover:bg-emerald-700 text-emerald-200'
+                showStats ? 'bg-gold text-white' : 'bg-panel text-ink hover:bg-wood-dark hover:text-white border border-wood-dark'
               }`}
             >
               📊 Stats
@@ -180,7 +180,7 @@ export default function RoomPage() {
               setCopied(true);
               setTimeout(() => setCopied(false), 2000);
             }}
-            className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded transition"
+            className="text-xs bg-panel hover:bg-wood-dark hover:text-white text-ink px-3 py-2 rounded transition border border-wood-dark font-semibold"
           >
             {copied ? '✓ Copied' : 'Copy invite link'}
           </button>
@@ -189,13 +189,13 @@ export default function RoomPage() {
 
       {/* Stats Panel */}
       {showStats && view && (
-        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-3 text-xs">
-          <div className="font-semibold text-purple-300 mb-2 text-sm">Room Scores</div>
-          <div className="text-purple-100 space-y-1.5">
+        <div className="bg-panel border-2 border-wood-dark rounded-lg p-3 text-xs">
+          <div className="font-semibold text-wood mb-2 text-sm">Room Scores</div>
+          <div className="text-ink space-y-1.5">
             {view.scores.map((score, i) => (
               <div key={i} className="flex justify-between items-center">
                 <span>{names[i]}</span>
-                <span className="font-bold text-lg text-purple-300">{score}</span>
+                <span className="font-bold text-lg text-wood">{score}</span>
               </div>
             ))}
           </div>
@@ -222,7 +222,7 @@ export default function RoomPage() {
             onSendMessage={(text) => emitAck('chat:send', { text })}
           />
           {/* Mobile Chat Bar */}
-          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-emerald-950/95 border-t border-emerald-700 p-2">
+          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-cream/95 border-t-2 border-wood-dark p-2">
             <Chat messages={snapshot.messages} onSendMessage={(text) => emitAck('chat:send', { text })} />
           </div>
         </>
@@ -334,11 +334,11 @@ function GameUI({
 
         {/* Contract Banner (Mobile) */}
         {view.contract && (
-          <div className="lg:hidden bg-blue-900/60 border border-blue-600 rounded px-3 py-2 text-center">
-            <div className="text-xs text-blue-300">Contract</div>
-            <div className="text-sm font-bold text-blue-100">
+          <div className="lg:hidden bg-panel border-2 border-wood-dark rounded px-3 py-2 text-center">
+            <div className="text-xs text-wood font-semibold">Contract</div>
+            <div className="text-sm font-bold text-ink">
               {view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}
-              <span className="text-xs text-blue-300 ml-2">({6 + view.contract.level} tricks)</span>
+              <span className="text-xs text-wood/70 ml-2">({6 + view.contract.level} tricks)</span>
             </div>
           </div>
         )}
@@ -351,8 +351,8 @@ function GameUI({
         </div>
 
         {/* Hand Area - Compact */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-2 md:p-3">
-          <div className="text-xs md:text-sm text-slate-300 font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
+        <div className="bg-panel border-2 border-wood-dark rounded-lg p-2 md:p-3">
+          <div className="text-xs md:text-sm text-wood font-semibold mb-2 uppercase tracking-wider">Your hand ({view.myHand.length})</div>
           <div className="flex flex-wrap gap-1 justify-center">
             {sortCards(view.myHand).map((c, i) => {
               const isMyTurn = view.phase === 'play' && view.turn === view.seat;
@@ -384,19 +384,19 @@ function GameUI({
       {/* Right: Info + Chat Sidebar (desktop only) */}
       <div className="hidden lg:flex w-80 flex-col gap-2 min-h-0 lg:min-h-full">
         {/* Contract Info */}
-        <div className="bg-blue-950/70 border border-blue-700 rounded-lg p-2 md:p-3 text-xs">
-          <div className="font-semibold text-blue-300 mb-2 text-sm">Phase & Contract</div>
-          <div className="text-blue-100 space-y-1.5 text-xs md:text-sm">
-            <div>Phase: <span className="font-bold text-blue-300">{view.phase}</span></div>
+        <div className="bg-panel border-2 border-wood-dark rounded-lg p-2 md:p-3 text-xs">
+          <div className="font-semibold text-wood mb-2 text-sm">Phase & Contract</div>
+          <div className="text-ink space-y-1.5 text-xs md:text-sm">
+            <div>Phase: <span className="font-bold text-wood">{view.phase}</span></div>
             {view.contract && (
               <>
                 <div>
-                  <div className="text-blue-300 font-semibold">Bid</div>
-                  <div className="text-blue-100">{view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}</div>
+                  <div className="text-wood font-semibold">Bid</div>
+                  <div className="text-ink">{view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}</div>
                 </div>
                 <div>
-                  <div className="text-blue-300 font-semibold">Partner</div>
-                  <div className="text-blue-100 text-xs">{view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}{view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}</div>
+                  <div className="text-wood font-semibold">Partner</div>
+                  <div className="text-ink text-xs">{view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}{view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}</div>
                 </div>
               </>
             )}
@@ -405,11 +405,11 @@ function GameUI({
 
         {/* Trump Display */}
         {view.contract && (
-          <div className="bg-red-950/70 border-2 border-red-600 rounded-lg p-2 md:p-3 text-center">
-            <div className="text-xs text-red-300 font-semibold mb-1">TRUMP</div>
-            <div className="text-3xl md:text-4xl font-bold text-red-400 mb-1">{TRUMP_LABEL[view.contract.trump]}</div>
+          <div className="bg-panel border-4 border-gold rounded-lg p-2 md:p-3 text-center">
+            <div className="text-xs text-wood font-bold mb-1">TRUMP</div>
+            <div className="text-3xl md:text-4xl font-bold text-wood mb-1">{TRUMP_LABEL[view.contract.trump]}</div>
             <div className="text-xs font-semibold">
-              <span className={view.trumpBroken ? 'text-green-400' : 'text-yellow-400'}>
+              <span className={view.trumpBroken ? 'text-green-600' : 'text-gold'}>
                 {view.trumpBroken ? '✓ Broken' : '⚠ Not broken'}
               </span>
             </div>
@@ -417,13 +417,13 @@ function GameUI({
         )}
 
         {/* Scores */}
-        <div className="bg-purple-950/70 border border-purple-700 rounded-lg p-2 md:p-3 text-xs">
-          <div className="font-semibold text-purple-300 mb-2 text-sm">Scores</div>
-          <div className="text-purple-100 space-y-1 md:space-y-1.5 text-xs md:text-sm">
+        <div className="bg-panel border-2 border-wood-dark rounded-lg p-2 md:p-3 text-xs">
+          <div className="font-semibold text-wood mb-2 text-sm">Scores</div>
+          <div className="text-ink space-y-1 md:space-y-1.5 text-xs md:text-sm">
             {view.scores.map((score, i) => (
               <div key={i} className="flex justify-between items-center">
                 <span className="truncate">{names[i]}</span>
-                <span className="font-bold text-purple-300 ml-2">{score}</span>
+                <span className="font-bold text-wood ml-2">{score}</span>
               </div>
             ))}
           </div>
@@ -433,7 +433,7 @@ function GameUI({
         {view.phase === 'scored' && (
           <button
             onClick={onNextDeal}
-            className="bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-amber-950 font-semibold rounded-lg px-3 py-2 md:px-4 md:py-3 text-sm w-full transition flex-shrink-0"
+            className="bg-gold hover:bg-wood text-white font-semibold rounded-lg px-3 py-2 md:px-4 md:py-3 text-sm w-full transition flex-shrink-0"
           >
             → Next deal
           </button>

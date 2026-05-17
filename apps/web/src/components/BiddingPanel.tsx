@@ -24,20 +24,20 @@ export function BiddingPanel({
   const isWash = points < 4;
 
   return (
-    <div className="bg-emerald-950/70 rounded-lg p-3 space-y-2">
+    <div className="bg-panel border-2 border-wood-dark rounded-lg p-3 space-y-2">
       <div className="flex justify-between items-center">
-        <div className="text-xs md:text-sm">
+        <div className="text-xs md:text-sm text-ink">
           Highest bid:{' '}
           {view.highestBid
             ? `${view.highestBid.bid.level}${TRUMP_LABEL[view.highestBid.bid.trump]} by seat ${view.highestBid.seat}`
             : '—'}
         </div>
-        {myTurn && <div className="text-xs font-semibold text-emerald-300">Points: {points}</div>}
+        {myTurn && <div className="text-xs font-semibold text-wood">Points: {points}</div>}
       </div>
       {myTurn ? (
         <div className="space-y-2">
           {isWash && (
-            <div className="bg-red-900/50 border border-red-700 rounded p-2 text-xs text-red-300 font-semibold">
+            <div className="bg-red-100 border-2 border-red-500 rounded p-2 text-xs text-red-700 font-semibold">
               ⚠️ Less than 4 points - must wash
             </div>
           )}
@@ -47,7 +47,7 @@ export function BiddingPanel({
                 <select
                   value={level}
                   onChange={(e) => setLevel(Number(e.target.value) as Bid['level'])}
-                  className="bg-emerald-900 rounded px-3 py-2 text-sm"
+                  className="bg-white border-2 border-wood-dark rounded px-3 py-2 text-sm text-ink font-semibold"
                 >
                   {[1, 2, 3, 4, 5, 6, 7].map((l) => (
                     <option key={l} value={l}>
@@ -60,7 +60,7 @@ export function BiddingPanel({
                     <button
                       key={t}
                       onClick={() => setTrump(t)}
-                      className={`px-3 py-2 md:px-2 md:py-1 rounded text-sm ${trump === t ? 'bg-emerald-400 text-emerald-950' : 'bg-emerald-800'}`}
+                      className={`px-3 py-2 md:px-2 md:py-1 rounded text-sm font-semibold transition ${trump === t ? 'bg-gold text-white' : 'bg-white text-ink border-2 border-wood-dark'}`}
                     >
                       {TRUMP_LABEL[t]}
                     </button>
@@ -72,7 +72,7 @@ export function BiddingPanel({
               {!isWash && (
                 <button
                   onClick={() => onBid({ level, trump })}
-                  className="bg-emerald-500 hover:bg-emerald-600 text-emerald-950 font-semibold px-4 py-2 rounded text-sm"
+                  className="bg-felt hover:bg-felt-dark text-white font-semibold px-4 py-2 rounded text-sm transition"
                 >
                   Bid
                 </button>
@@ -80,14 +80,14 @@ export function BiddingPanel({
               {isWash ? (
                 <button
                   onClick={() => onBid('pass')}
-                  className="bg-red-700 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded text-sm flex-1"
+                  className="bg-red-500 hover:bg-red-600 text-white font-semibold px-4 py-2 rounded text-sm flex-1 transition"
                 >
                   Wash
                 </button>
               ) : (
                 <button
                   onClick={() => onBid('pass')}
-                  className="bg-emerald-700 hover:bg-emerald-600 px-4 py-2 rounded text-sm font-semibold"
+                  className="bg-wood-dark hover:bg-wood text-white px-4 py-2 rounded text-sm font-semibold transition"
                 >
                   Pass
                 </button>
@@ -96,9 +96,9 @@ export function BiddingPanel({
           </div>
         </div>
       ) : (
-        <div className="text-emerald-300 text-sm">Waiting for seat {view.turn}…</div>
+        <div className="text-wood text-sm">Waiting for seat {view.turn}…</div>
       )}
-      <div className="text-xs text-emerald-300">
+      <div className="text-xs text-ink/60">
         History:{' '}
         {view.bidHistory
           .map((b) =>

@@ -35,8 +35,8 @@ export function TurnIndicator({ view, names }: { view: PlayerView; names: Record
   const turnName = names[view.turn] ?? `Seat ${view.turn}`;
   return (
     <div
-      className={`rounded-lg px-3 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base transition ${
-        myTurn ? 'bg-amber-400 text-emerald-950 animate-pulse' : 'bg-emerald-950/70 text-emerald-200'
+      className={`rounded-lg px-3 md:px-4 py-2 md:py-3 text-center font-semibold text-sm md:text-base transition border-2 ${
+        myTurn ? 'bg-gold text-white animate-pulse border-gold' : 'bg-panel text-ink border-wood-dark'
       }`}
     >
       {myTurn ? `Your turn ${PHASE_VERB[view.phase]}` : `${turnName} ${PHASE_VERB[view.phase]}…`}

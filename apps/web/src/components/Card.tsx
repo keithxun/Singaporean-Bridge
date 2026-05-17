@@ -48,5 +48,5 @@ export function CardView({
 
 export function CardBack({ small }: { small?: boolean }) {
   const size = small ? 'w-10 h-14' : 'w-14 h-20';
-  return <div className={`${size} bg-emerald-700 border border-emerald-500 rounded shadow`} />;
+  return <div className={`${size} bg-blue-700 border border-blue-500 rounded shadow`} />;
 }

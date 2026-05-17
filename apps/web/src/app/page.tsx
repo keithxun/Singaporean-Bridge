@@ -45,84 +45,76 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="bg-emerald-950/60 border border-emerald-800 rounded-2xl p-8 w-full max-w-md space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold">Singaporean Bridge</h1>
-          <p className="text-emerald-200 text-sm">4 players · private rooms</p>
+    <main className="min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6">
+        {/* Title */}
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-ink">Singaporean Bridge</h1>
+          <p className="text-ink/70 text-sm">4 players · private rooms</p>
         </div>
 
-        <div className="flex gap-2 border-b border-emerald-700">
+        {/* Name Input */}
+        <label className="block">
+          <input
+            className="w-full bg-white border-2 border-wood-dark rounded px-4 py-3 text-ink placeholder-ink/40 font-medium"
+            value={name}
+            onChange={(e) => setNameState(e.target.value)}
+            placeholder="Your name"
+          />
+        </label>
+
+        {/* Server URL (smaller, secondary) */}
+        <label className="block">
+          <input
+            className="w-full bg-panel border-2 border-wood-dark rounded px-4 py-2 text-ink/80 placeholder-ink/40 text-sm"
+            value={server}
+            onChange={(e) => setServerState(e.target.value)}
+            placeholder="Server URL (optional)"
+          />
+        </label>
+
+        {/* Action Buttons */}
+        <div className="space-y-2">
+          {/* Create Room Button */}
           <button
-            onClick={() => setTab('play')}
-            className={`px-3 py-2 border-b-2 transition ${
-              tab === 'play' ? 'border-emerald-400 text-emerald-400 font-semibold' : 'border-transparent text-emerald-300 hover:text-emerald-200'
-            }`}
+            disabled={busy}
+            onClick={createRoom}
+            className="w-full bg-white text-ink border-3 border-wood-dark font-bold rounded py-3 hover:bg-panel transition disabled:opacity-50"
           >
-            Play
+            Create Room
           </button>
-          <button
-            onClick={() => setTab('rules')}
-            className={`px-3 py-2 border-b-2 transition ${
-              tab === 'rules' ? 'border-emerald-400 text-emerald-400 font-semibold' : 'border-transparent text-emerald-300 hover:text-emerald-200'
-            }`}
-          >
-            Rules
-          </button>
+
+          {/* Join Room Section */}
+          <div className="flex gap-2">
+            <input
+              className="flex-1 bg-white border-2 border-wood-dark rounded px-4 py-2 text-ink uppercase tracking-widest placeholder-ink/40 font-bold text-center"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              placeholder="CODE"
+              maxLength={4}
+            />
+            <button
+              onClick={joinRoom}
+              className="px-6 bg-wood hover:bg-wood-dark text-white font-bold rounded transition"
+            >
+              Join
+            </button>
+          </div>
         </div>
 
-        {tab === 'play' ? (
-          <>
-            <label className="block">
-              <span className="text-sm">Your name</span>
-              <input
-                className="mt-1 w-full bg-emerald-900 border border-emerald-700 rounded px-3 py-2"
-                value={name}
-                onChange={(e) => setNameState(e.target.value)}
-                placeholder="e.g. Keith"
-              />
-            </label>
+        {/* Error Message */}
+        {error && <p className="text-red-600 text-sm font-semibold text-center">{error}</p>}
 
-            <label className="block">
-              <span className="text-sm">Server URL</span>
-              <input
-                className="mt-1 w-full bg-emerald-900 border border-emerald-700 rounded px-3 py-2 text-sm"
-                value={server}
-                onChange={(e) => setServerState(e.target.value)}
-              />
-            </label>
-
-            <div className="flex gap-2">
-              <button
-                disabled={busy}
-                onClick={createRoom}
-                className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-semibold rounded py-2"
-              >
-                Create room
-              </button>
-            </div>
-
-            <div className="flex gap-2">
-              <input
-                className="flex-1 bg-emerald-900 border border-emerald-700 rounded px-3 py-2 uppercase tracking-widest"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                placeholder="ROOM CODE"
-                maxLength={4}
-              />
-              <button
-                onClick={joinRoom}
-                className="bg-emerald-700 hover:bg-emerald-600 rounded px-4 font-semibold"
-              >
-                Join
-              </button>
-            </div>
-
-            {error && <p className="text-red-300 text-sm">{error}</p>}
-          </>
-        ) : (
-          <RulesTab />
-        )}
+        {/* Rules Collapsible */}
+        <div className="border-t border-wood-dark/30 pt-4">
+          <button
+            onClick={() => setTab(tab === 'play' ? 'rules' : 'play')}
+            className="text-sm font-semibold text-ink/70 hover:text-ink transition"
+          >
+            {tab === 'play' ? '📖 View Rules' : '← Back to Play'}
+          </button>
+          {tab === 'rules' && <RulesTab />}
+        </div>
       </div>
     </main>
   );

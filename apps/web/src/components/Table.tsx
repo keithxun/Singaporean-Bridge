@@ -3,6 +3,7 @@ import type { PlayerView, SeatIndex } from '@sgb/shared';
 import { CardView } from './Card';
 
 const SEAT_POS = ['bottom', 'left', 'top', 'right'] as const;
+const SEAT_EMOJI = ['🧑', '👩', '🧔', '👱'] as const;
 
 function relativePos(mySeat: SeatIndex, seat: SeatIndex) {
   const offset = ((seat - mySeat + 4) % 4) as 0 | 1 | 2 | 3;
@@ -18,7 +19,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
   return (
     <div className="flex flex-col h-full">
       {/* Circle with Players and Played Cards */}
-      <div className="relative flex-1 aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700 w-full">
+      <div className="relative flex-1 aspect-square mx-auto bg-felt rounded-full border-4 border-felt-dark w-full">
         {/* Player Badges */}
         {seats.map((s) => {
           const pos = relativePos(view.seat, s);
@@ -37,21 +38,22 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
               : 'right-2 top-1/2 -translate-y-1/2';
           const bgColor =
             isWinner
-              ? 'bg-orange-400/80 text-emerald-950 ring-2 ring-orange-300'
+              ? 'bg-orange-400 text-white ring-2 ring-orange-300'
               : isDeclarer
-              ? 'bg-yellow-500/80 text-emerald-950 ring-2 ring-yellow-400'
+              ? 'bg-yellow-500 text-white ring-2 ring-yellow-400'
               : isPartner
-              ? 'bg-cyan-600/80 text-white'
+              ? 'bg-cyan-500 text-white'
               : isTurn
-              ? 'bg-lime-400 text-emerald-950'
-              : 'bg-emerald-950/70';
+              ? 'bg-gold text-white'
+              : 'bg-wood text-white';
           return (
             <div key={s}>
               <div
-                className={`absolute ${posClass} text-xs md:text-sm font-semibold px-2 py-1.5 rounded-md shadow-md ${bgColor}`}
+                className={`absolute ${posClass} text-xs md:text-sm font-semibold px-2.5 py-1.5 rounded-md shadow-lg ${bgColor}`}
               >
+                <div className="text-lg mb-0.5">{SEAT_EMOJI[s]}</div>
                 <div className="text-xs md:text-sm">{label}</div>
-                <div className="text-xs opacity-90">{view.handCounts[s]}🂠 {view.tricksWonBy[s]}✓</div>
+                <div className="text-xs opacity-95">{view.handCounts[s]}🂠 {view.tricksWonBy[s]}✓</div>
               </div>
             </div>
           );

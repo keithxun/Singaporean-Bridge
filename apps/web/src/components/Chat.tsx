@@ -28,16 +28,16 @@ export function Chat({
   }
 
   return (
-    <div className="bg-emerald-950/70 rounded p-3 space-y-2 max-h-48 md:max-h-64 flex flex-col h-full">
-      <div className="text-xs text-emerald-300 font-semibold">Chat</div>
+    <div className="bg-panel border-2 border-wood-dark rounded p-3 space-y-2 max-h-48 md:max-h-64 flex flex-col h-full">
+      <div className="text-xs text-wood font-semibold">Chat</div>
       <div className="flex-1 overflow-y-auto space-y-1 min-h-0">
         {messages.length === 0 ? (
-          <div className="text-xs text-emerald-500 italic">No messages yet</div>
+          <div className="text-xs text-ink/50 italic">No messages yet</div>
         ) : (
           messages.map((msg, i) => (
             <div key={i} className="text-xs">
-              <span className="font-semibold text-emerald-300">{msg.name}:</span>{' '}
-              <span className="text-emerald-100 break-words">{msg.text}</span>
+              <span className="font-semibold text-wood">{msg.name}:</span>{' '}
+              <span className="text-ink break-words">{msg.text}</span>
             </div>
           ))
         )}
@@ -45,7 +45,7 @@ export function Chat({
       </div>
       <div className="flex gap-2 flex-col md:flex-row flex-shrink-0">
         <input
-          className="flex-1 bg-emerald-900 border border-emerald-700 rounded px-3 py-2 text-xs md:py-1"
+          className="flex-1 bg-white border-2 border-wood-dark rounded px-3 py-2 text-xs md:py-1 text-ink placeholder-ink/40"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -55,7 +55,7 @@ export function Chat({
         <button
           onClick={handleSend}
           disabled={!input.trim()}
-          className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 rounded px-4 py-2 md:px-3 md:py-1 text-xs font-semibold flex-shrink-0"
+          className="bg-felt hover:bg-felt-dark disabled:opacity-40 text-white rounded px-4 py-2 md:px-3 md:py-1 text-xs font-semibold flex-shrink-0 transition"
         >
           Send
         </button>
