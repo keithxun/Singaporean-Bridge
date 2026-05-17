@@ -24,7 +24,7 @@ export function BiddingPanel({
   const isWash = points < 4;
 
   return (
-    <div className="bg-panel border-2 border-wood-dark rounded-lg p-3 space-y-2">
+    <div className="space-y-1">
       <div className="flex justify-between items-center">
         <div className="text-xs md:text-sm text-ink">
           Highest bid:{' '}
