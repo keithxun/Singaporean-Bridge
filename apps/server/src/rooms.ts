@@ -103,6 +103,14 @@ export function addBot(room: Room, seat: SeatIndex, difficulty: 'smart' | 'rando
   room.players.set(botId, bot);
 }
 
+export function removeBot(room: Room, playerId: string): void {
+  if (room.game) throw new Error('game already started');
+  const player = room.players.get(playerId);
+  if (!player) throw new Error('player not found');
+  if (!player.isBot) throw new Error('can only remove bots');
+  room.players.delete(playerId);
+}
+
 export function allSeated(room: Room): boolean {
   const seats = new Set<number>();
   for (const p of room.players.values()) {

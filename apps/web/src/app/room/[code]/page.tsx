@@ -299,25 +299,32 @@ function Lobby({
     });
   }
 
+  function handleRemoveBot(playerId: string) {
+    getSocket().emit('bot:remove', { playerId }, (resp: any) => {
+      if (!resp?.ok) setError(resp?.error ?? 'error removing bot');
+    });
+  }
+
   return (
-    <div className="space-y-6 text-center">
-      <p className="text-panel text-sm">Pick a seat. All 4 seats must be filled to start.</p>
-      <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
+    <div className="space-y-4 md:space-y-6 text-center w-full max-w-2xl mx-auto px-4">
+      <p className="text-panel text-sm md:text-base">Pick a seat. All 4 seats must be filled to start.</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 w-full">
         {[0, 1, 2, 3].map((s) => {
           const taken = players.find((p) => p.seat === s);
           const mine = mySeat === s;
+          const isBot = taken?.name.startsWith('Bot');
           const isEmpty = !taken;
           return (
             <div key={s} className="space-y-1">
               <button
                 disabled={!!taken && !mine}
                 onClick={() => onSeat(s as SeatIndex)}
-                className={`w-full p-3 rounded border-2 transition ${
+                className={`w-full p-2 md:p-3 rounded border-2 transition text-xs md:text-sm ${
                   mine ? 'bg-gold text-ink border-wood-dark' : taken ? 'bg-wood text-panel border-wood-dark' : 'bg-wood-light text-ink hover:bg-wood border-wood-dark'
                 }`}
               >
-                <div className="font-semibold text-sm">Seat {s}</div>
-                <div className="text-xs opacity-80">{taken?.name ?? 'empty'}</div>
+                <div className="font-semibold">Seat {s}</div>
+                <div className="text-xs opacity-80 truncate">{taken?.name ?? 'empty'}</div>
               </button>
               {isEmpty && !mine && (
                 <button
@@ -327,6 +334,14 @@ function Lobby({
                   + Bot
                 </button>
               )}
+              {taken && isBot && !mine && (
+                <button
+                  onClick={() => handleRemoveBot(taken.playerId)}
+                  className="w-full text-xs bg-red-300 hover:bg-red-400 text-ink rounded px-2 py-1 border border-red-600 transition font-semibold"
+                >
+                  ✕ Remove
+                </button>
+              )}
             </div>
           );
         })}
@@ -334,7 +349,7 @@ function Lobby({
       <button
         disabled={!canStart}
         onClick={onStart}
-        className="w-full bg-gold disabled:opacity-40 text-ink font-semibold rounded px-4 py-3 text-sm md:text-base border-2 border-wood-dark transition hover:bg-yellow-500"
+        className="w-full bg-gold disabled:opacity-40 text-ink font-semibold rounded px-4 py-2 md:py-3 text-sm md:text-base border-2 border-wood-dark transition hover:bg-yellow-500"
       >
         Start game
       </button>
@@ -399,14 +414,14 @@ function GameUI({
       </div>
 
       {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-0 flex gap-0 flex-shrink-0 items-stretch">
-        {/* Player Profile Card - 1/3 width */}
-        <div className="w-1/3 flex-shrink-0 min-w-0">
+      <div className="bg-wood-light border-t-2 border-wood-dark px-1 md:px-2 py-1 md:py-2 flex gap-1 md:gap-2 flex-shrink-0 items-stretch">
+        {/* Player Profile Card */}
+        <div className="w-full md:w-1/3 flex-shrink-0 min-w-0">
           <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
         </div>
 
-        {/* Action Panel + Toggles - 2/3 width */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
+        {/* Action Panel + Toggles */}
+        <div className="hidden md:flex flex-1 min-w-0 flex-col gap-1">
           {/* Chat Toggle */}
           <button
             onClick={() => setShowChat(!showChat)}
@@ -436,12 +451,22 @@ function GameUI({
             )}
           </div>
         </div>
+
+        {/* Mobile Action Panel - shown at bottom on mobile */}
+        <div className="md:hidden flex flex-col gap-1 w-auto">
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className="text-xs font-semibold rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold hover:text-ink transition"
+          >
+            💬
+          </button>
+        </div>
       </div>
 
       {/* Hand Area */}
       {view.phase !== 'scored' && (
-        <div className="bg-panel border-t border-wood-dark px-1 py-1 flex-shrink-0 min-h-0">
-          <div className="flex gap-1 justify-center h-full">
+        <div className="bg-panel border-t border-wood-dark px-1 md:px-2 py-1 md:py-2 flex-shrink-0 min-h-0">
+          <div className="flex gap-0.5 md:gap-1 justify-center h-full">
             {sortCards(view.myHand).map((c, i) => {
               const isMyTurn = view.phase === 'play' && view.turn === view.seat;
               const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);

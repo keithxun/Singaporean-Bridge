@@ -9,6 +9,7 @@ import {
   createRoom,
   getRoom,
   joinRoom,
+  removeBot,
   snapshotFor,
   startNextDeal,
   startRoomGame,
@@ -127,6 +128,19 @@ io.on('connection', (socket) => {
       if (!joinedRoom) throw new Error('not in room');
       const room = getRoom(joinedRoom)!;
       addBot(room, seat, difficulty || 'smart');
+      ack?.({ ok: true });
+      broadcast(room);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
+    }
+  });
+
+  socket.on('bot:remove', ({ playerId }, ack) => {
+    try {
+      if (!joinedRoom) throw new Error('not in room');
+      const room = getRoom(joinedRoom)!;
+      removeBot(room, playerId);
       ack?.({ ok: true });
       broadcast(room);
     } catch (error) {
