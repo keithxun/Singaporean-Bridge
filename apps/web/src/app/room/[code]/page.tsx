@@ -85,7 +85,6 @@ export default function RoomPage() {
     const name = getName();
 
     if (!name) {
-      // Prompt for name if not set (e.g., joining via invite link)
       setNeedsName(true);
       return;
     }
@@ -96,18 +95,26 @@ export default function RoomPage() {
     function onState(snap: Snapshot) {
       setSnapshot(snap);
     }
-    s.on('room:state', onState);
 
-    s.emit('room:join', { code, playerId, name }, (resp: any) => {
-      if (!resp.ok) setError(resp.error);
-      else {
-        setSnapshot(resp.snapshot);
-        setNeedsName(false);
-      }
-    });
+    function joinRoomWithRetry() {
+      s.emit('room:join', { code, playerId, name }, (resp: any) => {
+        if (!resp.ok) setError(resp.error);
+        else {
+          setSnapshot(resp.snapshot);
+          setNeedsName(false);
+        }
+      });
+    }
+
+    s.on('room:state', onState);
+    s.on('connect', joinRoomWithRetry);
+
+    // Initial join
+    joinRoomWithRetry();
 
     return () => {
       s.off('room:state', onState);
+      s.off('connect', joinRoomWithRetry);
     };
   }, [code]);
 

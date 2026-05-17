@@ -22,7 +22,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? '*')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean);
-const corsOrigin: any = ALLOWED_ORIGINS.includes('*') ? '*' : ALLOWED_ORIGINS;
+const corsOrigin: string | string[] = ALLOWED_ORIGINS.includes('*') ? '*' : ALLOWED_ORIGINS;
 
 const app = express();
 app.use(cors({ origin: corsOrigin }));
@@ -51,8 +51,9 @@ function broadcast(room: Room): void {
         try {
           playBotMove(room, bot.playerId);
           broadcast(room);
-        } catch (e: any) {
-          console.error(`[${room.code}] bot move error for ${bot.name}:`, e?.message || e);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          console.error(`[${room.code}] bot move error for ${bot.name}: ${message}`);
         }
       }, 1000 + Math.random() * 1000); // 1-2 sec delay for natural feel
     }
@@ -102,8 +103,9 @@ io.on('connection', (socket) => {
       socket.join(room.code);
       ack?.({ ok: true, snapshot: snapshotFor(room, playerId) });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -114,8 +116,9 @@ io.on('connection', (socket) => {
       takeSeat(room, joinedPlayerId, seat);
       ack?.({ ok: true });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -126,8 +129,9 @@ io.on('connection', (socket) => {
       addBot(room, seat, difficulty || 'smart');
       ack?.({ ok: true });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -138,8 +142,9 @@ io.on('connection', (socket) => {
       startRoomGame(room);
       ack?.({ ok: true });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -150,8 +155,9 @@ io.on('connection', (socket) => {
       startNextDeal(room);
       ack?.({ ok: true });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -166,8 +172,9 @@ io.on('connection', (socket) => {
       // If a trick just completed, delay broadcast to show the completed trick
       const delay = currTricksCount > prevTricksCount ? 1500 : 0;
       setTimeout(() => broadcast(room), delay);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -178,8 +185,9 @@ io.on('connection', (socket) => {
       addChatMessage(room, joinedPlayerId, text);
       ack?.({ ok: true });
       broadcast(room);
-    } catch (e: any) {
-      ack?.({ ok: false, error: e.message });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      ack?.({ ok: false, error: message });
     }
   });
 
@@ -197,5 +205,5 @@ io.on('connection', (socket) => {
 
 const PORT = Number(process.env.PORT ?? 4000);
 httpServer.listen(PORT, '0.0.0.0', () => {
-  console.log(`[sgb] server listening on http://0.0.0.0:${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });
