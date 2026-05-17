@@ -3,6 +3,8 @@ import type { PlayerView, SeatIndex } from '@sgb/shared';
 
 const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 const SEAT_EMOJI = ['🧑', '👩', '🧔', '👱'] as const;
+const RANK_DISPLAY: Record<string, string> = { '2': '2', '3': '3', '4': '4', '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', 'T': '10', 'J': 'J', 'Q': 'Q', 'K': 'K', 'A': 'A' };
+const SUIT_DISPLAY: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠' };
 
 export function ContractInfo({
   view,
@@ -15,29 +17,28 @@ export function ContractInfo({
 
   const declarerName = names[view.contract.declarer];
   const partnerName = view.partnerSeatRevealed !== undefined ? names[view.partnerSeatRevealed] : undefined;
+  const partnerCardDisplay = view.partnerCard
+    ? `${RANK_DISPLAY[view.partnerCard.rank]}${SUIT_DISPLAY[view.partnerCard.suit]}`
+    : '?';
 
   return (
     <div className="bg-panel border border-wood-dark rounded p-2 space-y-1">
-      {/* Bid */}
-      <div className="text-center text-xs font-bold text-wood">
-        {view.contract.level}{TRUMP_LABEL[view.contract.trump]}
+      {/* Bid + Declarer in one line */}
+      <div className="text-center text-xs font-semibold text-wood">
+        {view.contract.level}{TRUMP_LABEL[view.contract.trump]}, {declarerName}
       </div>
 
-      {/* Declarer */}
-      <div className="text-center text-xs text-wood">
-        <span className="text-lg">{SEAT_EMOJI[view.contract.declarer]}</span>
-        <span className="font-semibold"> {declarerName}</span>
-      </div>
-
-      {/* Partner (if revealed) */}
-      {partnerName && (
-        <div className="text-center text-xs text-yellow-600 border-t border-wood-dark pt-1">
-          <span className="font-semibold">Partner:</span>
-          <span className="ml-1">
-            <span className="text-lg">{SEAT_EMOJI[view.partnerSeatRevealed!]}</span> {partnerName}
+      {/* Partner info */}
+      <div className="text-center text-xs">
+        <span className="font-semibold text-yellow-600">Partner:</span>
+        {partnerName ? (
+          <span className="text-yellow-600 ml-1">
+            <span className="text-lg">{SEAT_EMOJI[view.partnerSeatRevealed!]}</span> {partnerName} ({partnerCardDisplay})
           </span>
-        </div>
-      )}
+        ) : (
+          <span className="text-yellow-600 ml-1 font-semibold">{partnerCardDisplay}</span>
+        )}
+      </div>
     </div>
   );
 }
