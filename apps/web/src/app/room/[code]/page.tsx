@@ -181,7 +181,7 @@ export default function RoomPage() {
   const view = snapshot.view;
 
   return (
-    <main className={`h-screen overflow-hidden flex flex-col ${!view ? 'p-2 md:p-4' : 'p-0'}`}>
+    <main className={`h-screen overflow-hidden flex flex-col bg-felt ${!view ? 'p-0' : 'p-0'}`}>
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
@@ -191,8 +191,8 @@ export default function RoomPage() {
 
       {/* Header - only during lobby */}
       {!view && (
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
-          <h1 className="text-2xl md:text-xl font-bold text-ink">
+        <header className="bg-felt border-b-2 border-wood-dark flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-4 py-3 mb-2">
+          <h1 className="text-2xl md:text-xl font-bold text-panel">
             Room <span className="tracking-widest">{code}</span>
           </h1>
           <div className="flex gap-2 self-start md:self-auto">
@@ -202,7 +202,7 @@ export default function RoomPage() {
                 setCopied(true);
                 setTimeout(() => setCopied(false), 2000);
               }}
-              className="text-xs bg-panel hover:bg-wood-dark hover:text-white text-ink px-3 py-2 rounded transition border border-wood-dark font-semibold"
+              className="text-xs bg-wood-light hover:bg-wood text-ink px-3 py-2 rounded transition border-2 border-wood-dark font-semibold"
             >
               {copied ? '✓ Copied' : 'Copy invite link'}
             </button>
@@ -212,14 +212,16 @@ export default function RoomPage() {
 
 
       {!view ? (
-        <Lobby
-          mySeat={mySeat}
-          players={snapshot.players}
-          onSeat={(seat) => emitAck('seat:take', { seat })}
-          onStart={() => emitAck('game:start', {})}
-          canStart={seatedCount === 4}
-          setError={setError}
-        />
+        <div className="bg-felt flex-1 flex items-center justify-center">
+          <Lobby
+            mySeat={mySeat}
+            players={snapshot.players}
+            onSeat={(seat) => emitAck('seat:take', { seat })}
+            onStart={() => emitAck('game:start', {})}
+            canStart={seatedCount === 4}
+            setError={setError}
+          />
+        </div>
       ) : (
         <div className="flex-1 min-h-0 overflow-hidden">
           <GameUI
@@ -251,18 +253,16 @@ function Lobby({
   canStart: boolean;
   setError: (msg: string | null) => void;
 }) {
-  const [botDifficulty, setBotDifficulty] = useState<'smart' | 'random'>('smart');
-
   function handleAddBot(seat: SeatIndex) {
-    getSocket().emit('bot:add', { seat, difficulty: botDifficulty }, (resp: any) => {
+    getSocket().emit('bot:add', { seat, difficulty: 'smart' }, (resp: any) => {
       if (!resp?.ok) setError(resp?.error ?? 'error adding bot');
     });
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 text-center">
       <p className="text-panel text-sm">Pick a seat. All 4 seats must be filled to start.</p>
-      <div className="grid grid-cols-2 gap-3 max-w-md">
+      <div className="grid grid-cols-2 gap-3 w-full max-w-md mx-auto">
         {[0, 1, 2, 3].map((s) => {
           const taken = players.find((p) => p.seat === s);
           const mine = mySeat === s;
@@ -291,26 +291,13 @@ function Lobby({
           );
         })}
       </div>
-      <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-stretch">
-        <label className="flex items-center gap-2 text-xs flex-1">
-          <span className="text-panel">Bot difficulty:</span>
-          <select
-            value={botDifficulty}
-            onChange={(e) => setBotDifficulty(e.target.value as 'smart' | 'random')}
-            className="bg-panel text-ink border border-wood-dark rounded px-2 py-1 flex-1"
-          >
-            <option value="smart">Smart</option>
-            <option value="random">Random</option>
-          </select>
-        </label>
-        <button
-          disabled={!canStart}
-          onClick={onStart}
-          className="bg-gold disabled:opacity-40 text-ink font-semibold rounded px-4 py-2 text-sm md:text-base border-2 border-wood-dark transition hover:bg-yellow-500"
-        >
-          Start game
-        </button>
-      </div>
+      <button
+        disabled={!canStart}
+        onClick={onStart}
+        className="w-full bg-gold disabled:opacity-40 text-ink font-semibold rounded px-4 py-3 text-sm md:text-base border-2 border-wood-dark transition hover:bg-yellow-500"
+      >
+        Start game
+      </button>
     </div>
   );
 }

@@ -63,7 +63,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-felt flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
+      <div className="w-full max-w-sm space-y-6 flex flex-col items-center">
         {/* Title */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl md:text-5xl font-bold text-panel">Singaporean Bridge</h1>
@@ -80,15 +80,6 @@ export default function Home() {
           />
         </label>
 
-        {/* Server URL (smaller, secondary) */}
-        <label className="block">
-          <input
-            className="w-full bg-panel border-2 border-wood-dark rounded px-4 py-2 text-ink placeholder-ink/40 text-sm"
-            value={server}
-            onChange={(e) => setServerState(e.target.value)}
-            placeholder="Server URL (optional)"
-          />
-        </label>
 
         {/* Action Buttons */}
         <div className="space-y-2">
@@ -101,13 +92,13 @@ export default function Home() {
             Create Room
           </button>
 
-          {/* Quick Start Button */}
+          {/* Single Player Button */}
           <button
             disabled={busy}
             onClick={quickStartWithBots}
             className="w-full bg-gold text-ink border-2 border-wood-dark font-bold rounded py-3 hover:bg-yellow-500 transition disabled:opacity-50"
           >
-            Quick Test (3 Bots)
+            Single Player
           </button>
 
           {/* Join Room Section */}
@@ -131,16 +122,14 @@ export default function Home() {
         {/* Error Message */}
         {error && <p className="text-red-300 text-sm font-semibold text-center">{error}</p>}
 
-        {/* Rules Collapsible */}
-        <div className="border-t border-wood-dark/30 pt-4">
-          <button
-            onClick={() => setTab(tab === 'play' ? 'rules' : 'play')}
-            className="text-sm font-semibold text-panel/70 hover:text-panel transition"
-          >
-            {tab === 'play' ? '📖 View Rules' : '← Back to Play'}
-          </button>
-          {tab === 'rules' && <RulesTab />}
-        </div>
+        {/* Rules Button */}
+        <button
+          onClick={() => setTab(tab === 'play' ? 'rules' : 'play')}
+          className="w-full bg-wood text-ink border-2 border-wood-dark font-bold rounded py-3 hover:bg-wood-dark transition"
+        >
+          {tab === 'play' ? '📖 View Rules' : '← Back to Play'}
+        </button>
+        {tab === 'rules' && <RulesTab />}
       </div>
     </main>
   );
