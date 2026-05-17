@@ -16,9 +16,9 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
   const seats: SeatIndex[] = [0, 1, 2, 3];
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col h-full gap-2">
       {/* Circle */}
-      <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700">
+      <div className="relative flex-1 aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700 w-full">
         {seats.map((s) => {
           const pos = relativePos(view.seat, s);
           const isTurn = view.turn === s;
@@ -59,11 +59,11 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
 
       {/* Played Cards - Below the circle */}
       {displayTrick && displayTrick.cards.length > 0 && (
-        <div className="flex justify-center gap-2 flex-wrap">
+        <div className="flex justify-center gap-1 flex-wrap flex-shrink-0 min-h-0">
           {displayTrick.cards.map((playedCard) => (
-            <div key={`${playedCard.seat}`} className="flex flex-col items-center gap-1">
+            <div key={`${playedCard.seat}`} className="flex flex-col items-center gap-0.5">
               <CardView card={playedCard.card} disabled tiny animate />
-              <div className="text-xs text-emerald-300 font-semibold text-center max-w-[44px]">
+              <div className="text-xs text-emerald-300 font-semibold text-center max-w-[40px] truncate">
                 {names[playedCard.seat] || `Seat ${playedCard.seat}`}
               </div>
             </div>
