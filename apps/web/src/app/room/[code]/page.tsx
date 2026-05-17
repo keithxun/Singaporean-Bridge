@@ -362,7 +362,9 @@ function GameUI({
         {view.phase === 'play' && (
           <div className="flex justify-center">
             {(() => {
-              const myPlayedCard = view.currentTrick?.cards.find((c) => c.seat === view.seat);
+              const myPlayedCard =
+                view.currentTrick?.cards.find((c) => c.seat === view.seat) ??
+                view.lastCompletedTrick?.cards.find((c) => c.seat === view.seat);
               return myPlayedCard ? (
                 <CardView card={myPlayedCard.card} disabled small />
               ) : null;
