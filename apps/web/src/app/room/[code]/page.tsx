@@ -42,6 +42,7 @@ export default function RoomPage() {
   const [showStats, setShowStats] = useState(false);
   const [namePrompt, setNamePrompt] = useState('');
   const [needsName, setNeedsName] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!error) return;
@@ -174,10 +175,14 @@ export default function RoomPage() {
             </button>
           )}
           <button
-            onClick={() => navigator.clipboard.writeText(shareUrl)}
-            className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded"
+            onClick={() => {
+              navigator.clipboard.writeText(shareUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+            className="text-xs bg-emerald-800 hover:bg-emerald-700 px-3 py-2 rounded transition"
           >
-            Copy invite link
+            {copied ? '✓ Copied' : 'Copy invite link'}
           </button>
         </div>
       </header>
