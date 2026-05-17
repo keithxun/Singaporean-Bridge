@@ -52,6 +52,8 @@ export default function RoomPage() {
   const [copied, setCopied] = useState(false);
   const [botsAdded, setBotsAdded] = useState(false);
   const [isConnected, setIsConnected] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [disconnectedPlayers, setDisconnectedPlayers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!error) return;
@@ -100,6 +102,23 @@ export default function RoomPage() {
     const playerId = getPlayerId();
 
     function onState(snap: RoomSnapshot) {
+      const prevMessageCount = snapshot?.messages.length ?? 0;
+      const newMessageCount = snap.messages.length;
+
+      // Increment unread count if new messages arrived
+      if (newMessageCount > prevMessageCount) {
+        setUnreadCount((prev) => prev + (newMessageCount - prevMessageCount));
+      }
+
+      // Track disconnected players
+      const disconnected = new Set<string>();
+      for (const player of snap.players) {
+        if (!player.connected) {
+          disconnected.add(player.playerId);
+        }
+      }
+      setDisconnectedPlayers(disconnected);
+
       setSnapshot(snap);
     }
 
@@ -271,6 +290,9 @@ export default function RoomPage() {
             onAction={(action) => emitAck('action', action)}
             onNextDeal={() => emitAck('game:nextDeal', {})}
             onSendMessage={(text) => emitAck('chat:send', { text })}
+            unreadCount={unreadCount}
+            onChatOpen={() => setUnreadCount(0)}
+            disconnectedPlayers={disconnectedPlayers}
           />
         </div>
       )}
@@ -364,6 +386,9 @@ function GameUI({
   onAction,
   onNextDeal,
   onSendMessage,
+  unreadCount,
+  onChatOpen,
+  disconnectedPlayers,
 }: {
   view: PlayerView;
   names: Record<number, string>;
@@ -371,6 +396,9 @@ function GameUI({
   onAction: (action: GameAction) => void;
   onNextDeal: () => void;
   onSendMessage: (text: string) => void;
+  unreadCount: number;
+  onChatOpen: () => void;
+  disconnectedPlayers: Set<string>;
 }) {
   const [showChat, setShowChat] = useState(false);
   const myName = names[view.seat] || `Seat ${view.seat}`;
@@ -396,6 +424,13 @@ function GameUI({
 
   return (
     <div className="flex flex-col h-screen bg-cream overflow-hidden gap-0">
+      {/* Disconnect Notification */}
+      {disconnectedPlayers.size > 0 && (
+        <div className="bg-red-400 text-white px-4 py-2 text-sm font-semibold text-center">
+          ⚠️ {disconnectedPlayers.size} player{disconnectedPlayers.size > 1 ? 's' : ''} disconnected
+        </div>
+      )}
+
       {/* Opponents Row */}
       <Opponents view={view} names={names} />
 
@@ -424,10 +459,18 @@ function GameUI({
         <div className="flex-1 min-w-0 flex flex-col gap-1">
           {/* Chat Toggle */}
           <button
-            onClick={() => setShowChat(!showChat)}
-            className="text-xs font-semibold rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold hover:text-ink transition"
+            onClick={() => {
+              setShowChat(!showChat);
+              if (!showChat) onChatOpen();
+            }}
+            className="relative text-xs font-semibold rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold hover:text-ink transition"
           >
             💬 Chat
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Action Panel */}
@@ -460,10 +503,18 @@ function GameUI({
             <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
           </div>
           <button
-            onClick={() => setShowChat(!showChat)}
-            className="text-lg rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold transition flex-shrink-0"
+            onClick={() => {
+              setShowChat(!showChat);
+              if (!showChat) onChatOpen();
+            }}
+            className="relative text-lg rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold transition flex-shrink-0"
           >
             💬
+            {unreadCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
