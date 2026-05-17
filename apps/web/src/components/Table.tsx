@@ -34,12 +34,12 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             : 'right-2 top-1/2 -translate-y-1/2';
         const cardPosClass =
           pos === 'bottom'
-            ? 'bottom-24 left-1/2 -translate-x-1/2'
+            ? 'bottom-12 md:bottom-16 lg:bottom-24 left-1/2 -translate-x-1/2'
             : pos === 'top'
-            ? 'top-24 left-1/2 -translate-x-1/2'
+            ? 'top-12 md:top-16 lg:top-24 left-1/2 -translate-x-1/2'
             : pos === 'left'
-            ? 'left-24 top-1/2 -translate-y-1/2'
-            : 'right-24 top-1/2 -translate-y-1/2';
+            ? 'left-12 md:left-16 lg:left-24 top-1/2 -translate-y-1/2'
+            : 'right-12 md:right-16 lg:right-24 top-1/2 -translate-y-1/2';
         const bgColor =
           isWinner
             ? 'bg-orange-400/80 text-emerald-950 ring-2 ring-orange-300'
@@ -60,7 +60,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             </div>
             {played && (
               <div className={`absolute ${cardPosClass}`}>
-                <CardView card={played.card} disabled small animate />
+                <CardView card={played.card} disabled tiny animate />
               </div>
             )}
           </div>

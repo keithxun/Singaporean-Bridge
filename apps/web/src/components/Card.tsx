@@ -14,15 +14,17 @@ export function CardView({
   onClick,
   disabled,
   small,
+  tiny,
   animate,
 }: {
   card: TCard;
   onClick?: () => void;
   disabled?: boolean;
   small?: boolean;
+  tiny?: boolean;
   animate?: boolean;
 }) {
-  const size = small ? 'w-11 h-16 md:w-10 md:h-14 text-xs md:text-sm' : 'w-14 h-20 text-lg';
+  const size = tiny ? 'w-9 h-12 md:w-10 md:h-14 text-xs' : small ? 'w-11 h-16 md:w-10 md:h-14 text-xs md:text-sm' : 'w-14 h-20 text-lg';
   return (
     <button
       onClick={onClick}
