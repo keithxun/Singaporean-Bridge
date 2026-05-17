@@ -106,7 +106,7 @@ export default function RoomPage() {
     function joinRoomWithRetry() {
       s.emit('room:join', { code, playerId, name }, (resp: AckResponse) => {
         if (!resp.ok) setError(resp.error || 'error');
-        else {
+        else if (resp.snapshot) {
           setSnapshot(resp.snapshot);
           setNeedsName(false);
         }
@@ -165,8 +165,8 @@ export default function RoomPage() {
     }
     s.on('room:state', onState);
     s.emit('room:join', { code, playerId, name: namePrompt.trim() }, (resp: AckResponse) => {
-      if (!resp.ok) setError(resp.error);
-      else setSnapshot(resp.snapshot);
+      if (!resp.ok) setError(resp.error || 'error');
+      else if (resp.snapshot) setSnapshot(resp.snapshot);
     });
   }
 
@@ -287,7 +287,7 @@ function Lobby({
   setError,
 }: {
   mySeat: SeatIndex | undefined;
-  players: Snapshot['players'];
+  players: RoomSnapshot['players'];
   onSeat: (s: SeatIndex) => void;
   onStart: () => void;
   canStart: boolean;

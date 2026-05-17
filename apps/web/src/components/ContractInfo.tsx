@@ -17,8 +17,8 @@ export function ContractInfo({
 
   const declarerName = names[view.contract.declarer];
   const partnerName = view.partnerSeatRevealed !== undefined ? names[view.partnerSeatRevealed] : undefined;
-  const partnerCardDisplay = view.partnerCard
-    ? `${RANK_DISPLAY[view.partnerCard.rank]}${SUIT_DISPLAY[view.partnerCard.suit]}`
+  const partnerCardDisplay = view.contract.partnerCard
+    ? `${RANK_DISPLAY[view.contract.partnerCard.rank]}${SUIT_DISPLAY[view.contract.partnerCard.suit]}`
     : '?';
 
   return (
