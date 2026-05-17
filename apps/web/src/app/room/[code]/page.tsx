@@ -40,6 +40,8 @@ export default function RoomPage() {
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [showStats, setShowStats] = useState(false);
+  const [namePrompt, setNamePrompt] = useState('');
+  const [needsName, setNeedsName] = useState(false);
 
   useEffect(() => {
     if (!error) return;
@@ -49,9 +51,16 @@ export default function RoomPage() {
 
   useEffect(() => {
     setShareUrl(typeof window !== 'undefined' ? window.location.href : '');
+    const name = getName();
+
+    if (!name) {
+      // Prompt for name if not set (e.g., joining via invite link)
+      setNeedsName(true);
+      return;
+    }
+
     const s = getSocket();
     const playerId = getPlayerId();
-    const name = getName() || 'Anonymous';
 
     function onState(snap: Snapshot) {
       setSnapshot(snap);
@@ -60,7 +69,10 @@ export default function RoomPage() {
 
     s.emit('room:join', { code, playerId, name }, (resp: any) => {
       if (!resp.ok) setError(resp.error);
-      else setSnapshot(resp.snapshot);
+      else {
+        setSnapshot(resp.snapshot);
+        setNeedsName(false);
+      }
     });
 
     return () => {
@@ -73,6 +85,53 @@ export default function RoomPage() {
       if (!resp?.ok) setError(resp?.error ?? 'error');
       else setError(null);
     });
+  }
+
+  function handleNameSubmit() {
+    if (!namePrompt.trim()) {
+      setError('enter a name');
+      return;
+    }
+    setName(namePrompt.trim());
+    setNeedsName(false);
+    // Trigger re-join with new name
+    const s = getSocket();
+    const playerId = getPlayerId();
+    function onState(snap: Snapshot) {
+      setSnapshot(snap);
+    }
+    s.on('room:state', onState);
+    s.emit('room:join', { code, playerId, name: namePrompt.trim() }, (resp: any) => {
+      if (!resp.ok) setError(resp.error);
+      else setSnapshot(resp.snapshot);
+    });
+  }
+
+  // Name prompt modal
+  if (needsName) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-4">
+        <div className="bg-emerald-950/60 border border-emerald-800 rounded-2xl p-8 w-full max-w-md space-y-4">
+          <h1 className="text-2xl font-bold">Join Room {code}</h1>
+          <p className="text-emerald-200 text-sm">Enter your name to join</p>
+          <input
+            className="w-full bg-emerald-900 border border-emerald-700 rounded px-3 py-2"
+            value={namePrompt}
+            onChange={(e) => setNamePrompt(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleNameSubmit()}
+            placeholder="Your name"
+            autoFocus
+          />
+          <button
+            onClick={handleNameSubmit}
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-semibold rounded py-2"
+          >
+            Join
+          </button>
+          {error && <p className="text-red-300 text-sm text-center">{error}</p>}
+        </div>
+      </div>
+    );
   }
 
   if (!snapshot)

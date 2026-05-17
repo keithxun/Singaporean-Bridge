@@ -37,9 +37,10 @@ export default function Home() {
   }
 
   function joinRoom() {
-    if (!name.trim() || !code.trim()) return setError('enter a name and room code');
+    if (!name.trim()) return setError('enter your name');
+    if (!code.trim()) return setError('enter a room code');
     setName(name.trim());
-    setServerUrl(server.trim());
+    if (server.trim()) setServerUrl(server.trim());
     router.push(`/room/${code.trim().toUpperCase()}`);
   }
 
