@@ -1,7 +1,7 @@
 import type { Card, Rank, Suit } from './types.js';
 
-const SUITS: Suit[] = ['C', 'D', 'H', 'S'];
-const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
+export const SUITS: Suit[] = ['C', 'D', 'H', 'S'];
+export const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 
 export const RANK_ORDER: Record<Rank, number> = Object.fromEntries(
   RANKS.map((r, i) => [r, i])

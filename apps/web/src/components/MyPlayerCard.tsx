@@ -1,14 +1,26 @@
 'use client';
-import type { PlayerView, SeatIndex } from '@sgb/shared';
+import type { PlayerView, SeatIndex, Trick } from '@sgb/shared';
 import { CardView } from './Card';
 
 const SEAT_EMOJI = ['🧑', '👩', '🧔', '👱'] as const;
 
-export function MyPlayerCard({ view, name, displayTrick, tricksWon, score }: { view: PlayerView; name: string; displayTrick?: any; tricksWon?: number; score?: number }) {
+export function MyPlayerCard({
+  view,
+  name,
+  displayTrick,
+  tricksWon,
+  score,
+}: {
+  view: PlayerView;
+  name: string;
+  displayTrick?: Trick;
+  tricksWon?: number;
+  score?: number;
+}) {
   const label = `${name}${view.dealer === view.seat ? '(D)' : ''}`;
 
   // Get this player's played card
-  const myPlayedCard = displayTrick?.cards.find((c: any) => c.seat === view.seat);
+  const myPlayedCard = displayTrick?.cards.find((c) => c.seat === view.seat);
 
   // Determine highlight color based on game state
   let bgColor = 'bg-wood-light text-ink'; // default

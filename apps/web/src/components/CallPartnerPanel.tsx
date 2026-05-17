@@ -1,9 +1,7 @@
 'use client';
 import { useState } from 'react';
-import type { Card, PlayerView, Rank, Suit } from '@sgb/shared';
+import { RANKS, SUITS, type Card, type PlayerView, type Rank, type Suit } from '@sgb/shared';
 
-const SUITS: Suit[] = ['C', 'D', 'H', 'S'];
-const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const SUIT_GLYPH: Record<Suit, string> = { C: '♣', D: '♦', H: '♥', S: '♠' };
 
 export function CallPartnerPanel({

@@ -57,3 +57,10 @@ export interface GameState {
   scores: [number, number, number, number]; // running totals per seat
   trumpBroken: boolean; // whether trump has been played in a trick
 }
+
+export interface PlayerInfo {
+  playerId: string;
+  name: string;
+  seat?: SeatIndex;
+  connected: boolean;
+}

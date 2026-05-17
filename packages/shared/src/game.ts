@@ -5,8 +5,10 @@ import type {
   Bid,
   BidAction,
   Card,
+  ChatMessage,
   Contract,
   GameState,
+  PlayerInfo,
   SeatIndex,
   Trick,
 } from './types.js';
@@ -202,4 +204,11 @@ export function viewFor(state: GameState, seat: SeatIndex): PlayerView {
     lastCompletedTrick: state.tricks[state.tricks.length - 1],
     trumpBroken: state.trumpBroken,
   };
+}
+
+export interface RoomSnapshot {
+  code: string;
+  players: PlayerInfo[];
+  view?: PlayerView;
+  messages: ChatMessage[];
 }

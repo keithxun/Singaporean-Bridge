@@ -29,8 +29,8 @@ export default function Home() {
       const res = await fetch(`${server.trim()}/rooms`, { method: 'POST' });
       const { code } = await res.json();
       router.push(`/room/${code}`);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setBusy(false);
     }
@@ -54,8 +54,8 @@ export default function Home() {
       const res = await fetch(`${server.trim()}/rooms`, { method: 'POST' });
       const { code } = await res.json();
       router.push(`/room/${code}?quickstart=true`);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
       setBusy(false);
     }

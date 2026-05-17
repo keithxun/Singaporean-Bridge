@@ -2,6 +2,8 @@ import {
   canFollow,
   isLegalPlay,
   RANK_ORDER,
+  RANKS,
+  SUITS,
   type Bid,
   type Card,
   type GameState,
@@ -74,12 +76,10 @@ export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart
 }
 
 export function botCallPartner(hand: Card[], trumpSuit?: string): Card {
-  const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'] as const;
-  const SUITS = ['C', 'D', 'H', 'S'] as const;
-
-  // Try to call highest trump card not in hand
+  // Try to call highest trump card not in hand (A-K-Q-J-T-9-8-7-6-5-4-3-2 order)
+  const trumpRanks = [...RANKS].reverse();
   if (trumpSuit && trumpSuit !== 'NT' && SUITS.includes(trumpSuit as any)) {
-    for (const rank of RANKS) {
+    for (const rank of trumpRanks) {
       const card: Card = { suit: trumpSuit as Exclude<typeof Card.suit, undefined>, rank };
       if (!hand.some((h) => h.suit === card.suit && h.rank === card.rank)) {
         return card;

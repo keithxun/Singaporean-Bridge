@@ -10,17 +10,23 @@ import { MyPlayerCard } from '@/components/MyPlayerCard';
 import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
 import { Chat } from '@/components/Chat';
-import type { Bid, Card, ChatMessage, PlayerView, SeatIndex } from '@sgb/shared';
+import { ContractInfo } from '@/components/ContractInfo';
+import type { Bid, Card, ChatMessage, PlayerView, RoomSnapshot, SeatIndex } from '@sgb/shared';
 import { isLegalPlay } from '@sgb/shared';
 
-interface Snapshot {
-  code: string;
-  players: { playerId: string; name: string; seat?: SeatIndex; connected: boolean }[];
-  view?: PlayerView;
-  messages: ChatMessage[];
+const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
+
+interface AckResponse {
+  ok: boolean;
+  error?: string;
+  snapshot?: RoomSnapshot;
 }
 
-const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
+interface GameAction {
+  type: 'bid' | 'callPartner' | 'play';
+  bid?: Bid | 'pass';
+  card?: Card;
+}
 
 const SUIT_ORDER = ['S', 'H', 'D', 'C'] as const;
 const RANK_ORDER = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'] as const;
@@ -38,13 +44,14 @@ export default function RoomPage() {
   const searchParams = useSearchParams();
   const code = params.code.toUpperCase();
   const isQuickStart = searchParams.get('quickstart') === 'true';
-  const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
+  const [snapshot, setSnapshot] = useState<RoomSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
   const [namePrompt, setNamePrompt] = useState('');
   const [needsName, setNeedsName] = useState(false);
   const [copied, setCopied] = useState(false);
   const [botsAdded, setBotsAdded] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
     if (!error) return;
@@ -59,16 +66,16 @@ export default function RoomPage() {
     const userSeat = snapshot.players.find((p) => p.playerId === getPlayerId())?.seat;
     if (userSeat === undefined) {
       // User not yet seated, seat them in slot 0
-      getSocket().emit('seat:take', { seat: 0 }, (resp: any) => {
+      getSocket().emit('seat:take', { seat: 0 }, (resp: AckResponse) => {
         if (resp?.ok) {
           // Now add 3 bots to other seats
           setTimeout(() => {
-            getSocket().emit('bot:add', { seat: 1, difficulty: 'smart' }, () => {
-              getSocket().emit('bot:add', { seat: 2, difficulty: 'smart' }, () => {
-                getSocket().emit('bot:add', { seat: 3, difficulty: 'smart' }, () => {
+            getSocket().emit('bot:add', { seat: 1, difficulty: 'smart' }, (r: AckResponse) => {
+              getSocket().emit('bot:add', { seat: 2, difficulty: 'smart' }, (r: AckResponse) => {
+                getSocket().emit('bot:add', { seat: 3, difficulty: 'smart' }, (r: AckResponse) => {
                   // Start game after all bots added
                   setTimeout(() => {
-                    getSocket().emit('game:start', {}, () => {});
+                    getSocket().emit('game:start', {}, (r: AckResponse) => {});
                   }, 500);
                 });
               });
@@ -92,12 +99,12 @@ export default function RoomPage() {
     const s = getSocket();
     const playerId = getPlayerId();
 
-    function onState(snap: Snapshot) {
+    function onState(snap: RoomSnapshot) {
       setSnapshot(snap);
     }
 
     function joinRoomWithRetry() {
-      s.emit('room:join', { code, playerId, name }, (resp: any) => {
+      s.emit('room:join', { code, playerId, name }, (resp: AckResponse) => {
         if (!resp.ok) setError(resp.error);
         else {
           setSnapshot(resp.snapshot);
@@ -106,20 +113,38 @@ export default function RoomPage() {
       });
     }
 
+    function onConnect() {
+      setIsConnected(true);
+      joinRoomWithRetry();
+    }
+
+    function onDisconnect() {
+      setIsConnected(false);
+    }
+
     s.on('room:state', onState);
-    s.on('connect', joinRoomWithRetry);
+    s.on('connect', onConnect);
+    s.on('disconnect', onDisconnect);
+
+    // Set initial connection state
+    setIsConnected(s.connected);
 
     // Initial join
     joinRoomWithRetry();
 
     return () => {
       s.off('room:state', onState);
-      s.off('connect', joinRoomWithRetry);
+      s.off('connect', onConnect);
+      s.off('disconnect', onDisconnect);
     };
   }, [code]);
 
-  function emitAck(event: string, payload: any) {
-    getSocket().emit(event, payload, (resp: any) => {
+  function emitAck(event: string, payload: unknown) {
+    if (!isConnected) {
+      setError('Reconnecting... please wait');
+      return;
+    }
+    getSocket().emit(event, payload, (resp: AckResponse) => {
       if (!resp?.ok) setError(resp?.error ?? 'error');
       else setError(null);
     });
@@ -135,11 +160,11 @@ export default function RoomPage() {
     // Trigger re-join with new name
     const s = getSocket();
     const playerId = getPlayerId();
-    function onState(snap: Snapshot) {
+    function onState(snap: RoomSnapshot) {
       setSnapshot(snap);
     }
     s.on('room:state', onState);
-    s.emit('room:join', { code, playerId, name: namePrompt.trim() }, (resp: any) => {
+    s.emit('room:join', { code, playerId, name: namePrompt.trim() }, (resp: AckResponse) => {
       if (!resp.ok) setError(resp.error);
       else setSnapshot(resp.snapshot);
     });
@@ -189,6 +214,14 @@ export default function RoomPage() {
 
   return (
     <main className={`h-screen overflow-hidden flex flex-col bg-felt ${!view ? 'p-0' : 'p-0'}`}>
+      {/* Connection Status */}
+      {!isConnected && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-amber-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold z-50 max-w-md text-center flex items-center gap-2 justify-center">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          Reconnecting…
+        </div>
+      )}
+
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
@@ -320,7 +353,7 @@ function GameUI({
   view: PlayerView;
   names: Record<number, string>;
   messages: ChatMessage[];
-  onAction: (a: any) => void;
+  onAction: (action: GameAction) => void;
   onNextDeal: () => void;
   onSendMessage: (text: string) => void;
 }) {
@@ -390,11 +423,8 @@ function GameUI({
             {view.phase === 'callPartner' && (
               <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
             )}
-            {view.phase === 'play' && view.contract && (
-              <div className="bg-panel border border-wood-dark rounded p-2 text-center text-xs">
-                <div className="text-wood font-bold">{view.contract.level}{TRUMP_LABEL[view.contract.trump]}</div>
-                <div className="text-wood text-xs">{names[view.contract.declarer]}</div>
-              </div>
+            {view.phase === 'play' && (
+              <ContractInfo view={view} names={names} />
             )}
             {view.phase === 'scored' && (
               <button

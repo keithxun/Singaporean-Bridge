@@ -8,6 +8,7 @@ import {
   type Card,
   type GameState,
   type PlayerView,
+  type RoomSnapshot,
   type SeatIndex,
 } from '@sgb/shared';
 
@@ -159,13 +160,6 @@ export function addChatMessage(room: Room, playerId: string, text: string): void
   room.messages.push(msg);
   // Keep only last 50 messages
   if (room.messages.length > 50) room.messages.shift();
-}
-
-export interface RoomSnapshot {
-  code: string;
-  players: { playerId: string; name: string; seat?: SeatIndex; connected: boolean }[];
-  view?: PlayerView;
-  messages: ChatMessage[];
 }
 
 export function snapshotFor(room: Room, playerId: string): RoomSnapshot {
