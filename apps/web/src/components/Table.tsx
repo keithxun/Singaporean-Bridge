@@ -16,9 +16,10 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
   const seats: SeatIndex[] = [0, 1, 2, 3];
 
   return (
-    <div className="flex flex-col h-full gap-2">
-      {/* Circle */}
+    <div className="flex flex-col h-full">
+      {/* Circle with Players and Played Cards */}
       <div className="relative flex-1 aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700 w-full">
+        {/* Player Badges */}
         {seats.map((s) => {
           const pos = relativePos(view.seat, s);
           const isTurn = view.turn === s;
@@ -55,21 +56,26 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
             </div>
           );
         })}
-      </div>
 
-      {/* Played Cards - Below the circle */}
-      {displayTrick && displayTrick.cards.length > 0 && (
-        <div className="flex justify-center gap-1 flex-wrap flex-shrink-0 min-h-0">
-          {displayTrick.cards.map((playedCard) => (
-            <div key={`${playedCard.seat}`} className="flex flex-col items-center gap-0.5">
-              <CardView card={playedCard.card} disabled tiny animate />
-              <div className="text-xs text-emerald-300 font-semibold text-center max-w-[40px] truncate">
-                {names[playedCard.seat] || `Seat ${playedCard.seat}`}
+        {/* Played Cards - Positioned at each player's seat */}
+        {displayTrick && displayTrick.cards.length > 0 &&
+          displayTrick.cards.map((playedCard) => {
+            const pos = relativePos(view.seat, playedCard.seat);
+            const cardPosClass =
+              pos === 'bottom'
+                ? 'bottom-20 left-1/2 -translate-x-1/2'
+                : pos === 'top'
+                ? 'top-20 left-1/2 -translate-x-1/2'
+                : pos === 'left'
+                ? 'left-20 top-1/2 -translate-y-1/2'
+                : 'right-20 top-1/2 -translate-y-1/2';
+            return (
+              <div key={`card-${playedCard.seat}`} className={`absolute ${cardPosClass}`}>
+                <CardView card={playedCard.card} disabled tiny animate />
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            );
+          })}
+      </div>
     </div>
   );
 }
