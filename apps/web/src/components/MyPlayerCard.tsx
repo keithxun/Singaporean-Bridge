@@ -13,13 +13,13 @@ export function MyPlayerCard({ view, name, displayTrick, tricksWon, score }: { v
   // Determine highlight color based on game state
   let bgColor = 'bg-wood-light text-ink'; // default
   if (view.phase === 'bidding' && view.turn === view.seat) {
-    bgColor = 'bg-gold text-wood-dark'; // it's their turn to bid
+    bgColor = 'bg-gold text-ink'; // it's their turn to bid
   } else if (view.phase === 'play' && view.turn === view.seat) {
-    bgColor = 'bg-poker-green text-wood-dark'; // it's their turn to play
+    bgColor = 'bg-gold text-ink'; // it's their turn to play
   } else if (view.contract?.declarer === view.seat) {
-    bgColor = 'bg-gold text-wood-dark'; // they are declarer
+    bgColor = 'bg-gold text-ink'; // they are declarer
   } else if (view.contract && view.partnerSeatRevealed === view.seat) {
-    bgColor = 'bg-poker-blue text-white'; // they are partner
+    bgColor = 'bg-yellow-500 text-ink'; // they are partner
   }
 
   return (

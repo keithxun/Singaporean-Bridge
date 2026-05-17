@@ -322,28 +322,26 @@ function GameUI({
   )).length || 0;
 
   return (
-    <div className="flex flex-col h-screen bg-wood-dark overflow-hidden gap-0">
+    <div className="flex flex-col h-screen bg-cream overflow-hidden gap-0">
       {/* Opponents Row */}
       <Opponents view={view} names={names} />
 
-      {/* Bidding/Play Area */}
+      {/* Play/Bidding Area - shows user's played card or bidding info */}
       <div className="flex-1 bg-felt flex-shrink-0 min-h-0 flex items-center justify-center">
-        {view.phase === 'bidding' && (
-          <div className="flex gap-4 flex-wrap justify-center">
-            {view.bidHistory.map((bid, i) => (
-              <div key={i} className="text-center">
-                <div className="text-gold text-2xl font-bold">
-                  {bid.bid === 'pass' ? 'Pass' : `${bid.bid.level}${TRUMP_LABEL[bid.bid.trump]}`}
-                </div>
-                <div className="text-xs text-panel">{names[bid.seat]}</div>
-              </div>
-            ))}
+        {view.phase === 'play' && (
+          <div className="flex justify-center">
+            {(() => {
+              const myPlayedCard = view.currentTrick?.cards.find((c) => c.seat === view.seat);
+              return myPlayedCard ? (
+                <CardView card={myPlayedCard.card} disabled small />
+              ) : null;
+            })()}
           </div>
         )}
       </div>
 
       {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t border-gold px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
+      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
         {/* Player Profile Card - 1/3 width */}
         <div className="w-1/3 flex-shrink-0 min-w-0">
           <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
@@ -354,7 +352,7 @@ function GameUI({
           {/* Chat Toggle */}
           <button
             onClick={() => setShowChat(!showChat)}
-            className={`text-xs font-semibold rounded px-2 py-1 transition ${showChat ? 'bg-gold text-wood-dark' : 'bg-panel text-ink border border-wood-dark hover:bg-gold hover:text-wood-dark'}`}
+            className="text-xs font-semibold rounded px-2 py-1 bg-white text-ink border border-wood-dark hover:bg-gold hover:text-ink transition"
           >
             💬 Chat
           </button>
@@ -376,7 +374,7 @@ function GameUI({
             {view.phase === 'scored' && (
               <button
                 onClick={onNextDeal}
-                className="w-full bg-poker-green hover:bg-poker-green text-wood-dark font-semibold rounded px-2 py-1 text-xs transition"
+                className="w-full bg-white hover:bg-gold text-ink font-semibold rounded px-2 py-1 text-xs transition border border-wood-dark"
               >
                 Next deal
               </button>

@@ -4,6 +4,7 @@ import { CardView } from './Card';
 
 const SEAT_POS = ['bottom', 'left', 'top', 'right'] as const;
 const SEAT_EMOJI = ['🧑', '👩', '🧔', '👱'] as const;
+const TRUMP_LABEL: Record<string, string> = { C: '♣', D: '♦', H: '♥', S: '♠', NT: 'NT' };
 
 function relativePos(mySeat: SeatIndex, seat: SeatIndex) {
   const offset = ((seat - mySeat + 4) % 4) as 0 | 1 | 2 | 3;
@@ -14,6 +15,13 @@ export function Opponents({ view, names }: { view: PlayerView; names: Record<num
   const trick = view.currentTrick;
   const lastTrick = view.lastCompletedTrick;
   const displayTrick = trick && trick.cards.length > 0 ? trick : lastTrick;
+
+  // Get current bid for each opponent (last bid in history)
+  const getCurrentBid = (seat: SeatIndex) => {
+    if (view.phase !== 'bidding') return null;
+    const latestBid = [...view.bidHistory].reverse().find((b) => b.seat === seat);
+    return latestBid ? latestBid.bid : null;
+  };
 
   const opponents = [0, 1, 2, 3]
     .filter((s) => s !== view.seat)
@@ -36,14 +44,16 @@ export function Opponents({ view, names }: { view: PlayerView; names: Record<num
 
           let bgColor = 'bg-wood-light text-ink';
           if (isWinner) {
-            bgColor = 'bg-poker-green text-wood-dark';
+            bgColor = 'bg-gold text-ink';
           } else if (isDeclarer) {
-            bgColor = 'bg-gold text-wood-dark';
+            bgColor = 'bg-gold text-ink';
           } else if (isPartner) {
-            bgColor = 'bg-poker-blue text-white';
+            bgColor = 'bg-yellow-500 text-ink';
           } else if (isTurn) {
-            bgColor = 'bg-gold text-wood-dark';
+            bgColor = 'bg-gold text-ink';
           }
+
+          const currentBid = getCurrentBid(s as SeatIndex);
 
           return (
             <div key={s} className="w-1/3 flex flex-col gap-1 min-w-0">
@@ -59,16 +69,20 @@ export function Opponents({ view, names }: { view: PlayerView; names: Record<num
                   </div>
                 </div>
               </div>
-              {/* Played card for this opponent */}
-              {displayTrick && (
-                <div className="flex justify-center">
-                  {displayTrick.cards.find((c) => c.seat === s) ? (
+              {/* Show current bid or played card */}
+              <div className="flex justify-center h-8">
+                {currentBid ? (
+                  <div className="text-xs font-bold text-gold bg-wood-dark rounded px-2 py-1">
+                    {currentBid === 'pass' ? 'Pass' : `${currentBid.level}${TRUMP_LABEL[currentBid.trump]}`}
+                  </div>
+                ) : displayTrick ? (
+                  displayTrick.cards.find((c) => c.seat === s) ? (
                     <CardView card={displayTrick.cards.find((c) => c.seat === s)!.card} disabled small />
                   ) : (
                     <div className="w-8 h-12 opacity-20" />
-                  )}
-                </div>
-              )}
+                  )
+                ) : null}
+              </div>
             </div>
           );
         })}
