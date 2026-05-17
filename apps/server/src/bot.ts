@@ -47,6 +47,7 @@ function bestSuit(hand: Card[]): Trump {
 export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart'): Bid | 'pass' {
   const hand = view.myHand;
   const points = countPoints(hand);
+  console.log(`[BOT BID] Seat ${view.seat}, Points: ${points}, Hand: ${hand.map(c => `${c.rank}${c.suit}`).join(', ')}`);
 
   // Calculate what bid level AI would make with its own points (opening bid thresholds)
   function calculateBidLevel(pts: number): Bid['level'] | null {
@@ -57,23 +58,31 @@ export function botBid(view: PlayerView, difficulty: 'random' | 'smart' = 'smart
   }
 
   const myBidLevel = calculateBidLevel(points);
+  console.log(`[BOT BID] Seat ${view.seat}, Calculated level: ${myBidLevel}`);
 
   // If there's already a bid, decide whether to overcall
   if (view.highestBid) {
     const currentLevel = view.highestBid.bid.level;
+    console.log(`[BOT BID] Seat ${view.seat}, Highest bid: ${currentLevel}, My level: ${myBidLevel}`);
     // Only outbid if my calculated level is higher than current bid
     if (myBidLevel && myBidLevel > currentLevel) {
-      return { level: myBidLevel, trump: bestSuit(hand) };
+      const bid = { level: myBidLevel, trump: bestSuit(hand) };
+      console.log(`[BOT BID] Seat ${view.seat}, Overbidding with: ${bid.level}${bid.trump}`);
+      return bid;
     }
+    console.log(`[BOT BID] Seat ${view.seat}, Passing`);
     return 'pass';
   }
 
   // Opening bid: bid if we have enough points
   if (!myBidLevel) {
+    console.log(`[BOT BID] Seat ${view.seat}, Opening pass`);
     return 'pass';
   }
 
-  return { level: myBidLevel, trump: bestSuit(hand) };
+  const bid = { level: myBidLevel, trump: bestSuit(hand) };
+  console.log(`[BOT BID] Seat ${view.seat}, Opening bid: ${bid.level}${bid.trump}`);
+  return bid;
 }
 
 export function botCallPartner(hand: Card[], trumpSuit?: string): Card {
@@ -107,14 +116,18 @@ export function botPlay(
   hand: Card[],
   difficulty: 'random' | 'smart' = 'smart'
 ): Card {
-  // Find legal plays using proper isLegalPlay rules
-  const legal = hand.filter((c) => isLegalPlay(hand, c, view.currentTrick, view.contract?.trump, view.trumpBroken));
+  try {
+    // Find legal plays using proper isLegalPlay rules
+    const legal = hand.filter((c) => isLegalPlay(hand, c, view.currentTrick, view.contract?.trump, view.trumpBroken));
+    console.log(`[BOT PLAY] Seat ${view.seat}, Legal plays: ${legal.map(c => `${c.rank}${c.suit}`).join(', ')}, Hand: ${hand.map(c => `${c.rank}${c.suit}`).join(', ')}`);
 
-  if (difficulty === 'random' || legal.length === 1) {
-    return legal[Math.floor(Math.random() * legal.length)];
-  }
+    if (difficulty === 'random' || legal.length === 1) {
+      const chosen = legal[Math.floor(Math.random() * legal.length)];
+      console.log(`[BOT PLAY] Random/Single option: ${chosen.rank}${chosen.suit}`);
+      return chosen;
+    }
 
-  const trick = view.currentTrick;
+    const trick = view.currentTrick;
   const contract = view.contract;
   const partnerConfirmed = view.partnerSeatRevealed !== undefined;
 
@@ -179,9 +192,23 @@ export function botPlay(
     }
   }
 
-  // Fallback: play smallest card
-  legal.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
-  return legal[0];
+    // Fallback: play smallest card
+    legal.sort((a, b) => RANK_ORDER[a.rank] - RANK_ORDER[b.rank]);
+    const fallback = legal[0];
+    console.log(`[BOT PLAY] Fallback (smallest): ${fallback.rank}${fallback.suit}`);
+    return fallback;
+  } catch (error) {
+    console.error(`[BOT PLAY ERROR] Seat ${view.seat}:`, error);
+    // Emergency fallback: play any legal card
+    try {
+      const emergency = hand.filter((c) => isLegalPlay(hand, c, view.currentTrick, view.contract?.trump, view.trumpBroken))[0];
+      console.log(`[BOT PLAY] Emergency fallback: ${emergency.rank}${emergency.suit}`);
+      return emergency;
+    } catch {
+      console.error(`[BOT PLAY] Complete failure, returning first card`);
+      return hand[0];
+    }
+  }
 }
 
 // Detect which suits the partner is out of (missing) by analyzing tricks

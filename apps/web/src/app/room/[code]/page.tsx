@@ -9,7 +9,6 @@ import { Opponents } from '@/components/Opponents';
 import { MyPlayerBadge } from '@/components/MyPlayerBadge';
 import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
-import { TurnIndicator } from '@/components/TurnIndicator';
 import { Chat } from '@/components/Chat';
 import type { Bid, Card, ChatMessage, PlayerView, SeatIndex } from '@sgb/shared';
 import { isLegalPlay } from '@sgb/shared';
@@ -352,9 +351,6 @@ function GameUI({
           <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
         </div>
       )}
-
-      {/* Turn indicator - play phase only */}
-      {view.phase === 'play' && <TurnIndicator view={view} names={names} />}
 
       {/* Hand Area */}
       <div className="bg-panel border-t-2 border-wood-dark px-2 py-2 flex-shrink-0">
