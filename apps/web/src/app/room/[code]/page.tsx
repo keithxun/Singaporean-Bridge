@@ -340,7 +340,7 @@ function GameUI({
       <div className="bg-wood-light border-t-4 border-wood-dark px-2 py-2 flex gap-2 flex-shrink-0 items-stretch">
         {/* Player Profile Card - 1/3 width */}
         <div className="flex-none w-1/3 min-w-0">
-          <MyPlayerCard view={view} name={myName} displayTrick={view.currentTrick?.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
+          <MyPlayerCard view={view} name={myName} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
         </div>
 
         {/* Action Panel - 2/3 width */}
