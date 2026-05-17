@@ -6,7 +6,7 @@ import { getName, getPlayerId, setName } from '@/lib/identity';
 import { getSocket } from '@/lib/socket';
 import { CardView } from '@/components/Card';
 import { Opponents } from '@/components/Opponents';
-import { MyPlayerBadge } from '@/components/MyPlayerBadge';
+import { MyPlayerCard } from '@/components/MyPlayerCard';
 import { BiddingPanel } from '@/components/BiddingPanel';
 import { CallPartnerPanel } from '@/components/CallPartnerPanel';
 import { Chat } from '@/components/Chat';
@@ -336,62 +336,72 @@ function GameUI({
       {/* Felt Play Area - grows to fill */}
       <div className="flex-1 bg-felt" />
 
-      {/* My Player Area + Bidding/CallPartner Controls */}
-      {view.phase === 'bidding' && (
-        <div className="flex gap-2 bg-panel px-2 py-2 border-t-2 border-wood-dark flex-shrink-0">
-          <MyPlayerBadge view={view} name={myName} />
-          <div className="flex-1 min-w-0">
+      {/* My Player Card + Action Panel Row */}
+      <div className="bg-wood-light border-t-4 border-wood-dark px-2 py-2 flex gap-2 flex-shrink-0 items-stretch">
+        {/* Player Profile Card - 1/3 width */}
+        <div className="flex-none w-1/3 min-w-0">
+          <MyPlayerCard view={view} name={myName} displayTrick={view.currentTrick?.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
+        </div>
+
+        {/* Action Panel - 2/3 width */}
+        <div className="flex-1 min-w-0 overflow-y-auto">
+          {view.phase === 'bidding' && (
             <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
+          )}
+          {view.phase === 'callPartner' && (
+            <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
+          )}
+          {view.phase === 'play' && view.contract && (
+            <div className="bg-panel border-2 border-wood-dark rounded p-3 text-center">
+              <div className="text-xs text-wood font-semibold uppercase mb-1">Contract</div>
+              <div className="text-lg font-bold text-ink">
+                {view.contract.level}{TRUMP_LABEL[view.contract.trump]}
+              </div>
+              <div className="text-xs text-wood mt-1">by {names[view.contract.declarer]}</div>
+            </div>
+          )}
+          {view.phase === 'scored' && (
+            <button
+              onClick={onNextDeal}
+              className="w-full bg-felt hover:bg-felt-dark text-white font-semibold rounded px-3 py-2 text-sm transition"
+            >
+              → Next deal
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Hand Area */}
+      {view.phase !== 'scored' && (
+        <div className="bg-panel border-t-2 border-wood-dark px-2 py-2 flex-shrink-0">
+          <div className="text-xs text-wood font-semibold mb-1 uppercase tracking-wider flex justify-between">
+            <span>Your hand ({view.myHand.length})</span>
+            <button
+              onClick={() => setShowInfo(true)}
+              className="text-lg hover:text-wood-dark transition"
+            >
+              ℹ
+            </button>
+          </div>
+          <div className="flex gap-1 justify-center">
+            {sortCards(view.myHand).map((c, i) => {
+              const isMyTurn = view.phase === 'play' && view.turn === view.seat;
+              const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
+              const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
+              return (
+                <div key={`${c.rank}${c.suit}${i}`} className={`w-[calc(100%/13)] flex justify-center ${isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}`}>
+                  <CardView
+                    card={c}
+                    disabled={!isLegal}
+                    small
+                    onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
-
-      {view.phase === 'callPartner' && (
-        <div className="bg-panel px-2 py-2 border-t-2 border-wood-dark flex-shrink-0">
-          <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
-        </div>
-      )}
-
-      {/* Hand Area */}
-      <div className="bg-panel border-t-2 border-wood-dark px-2 py-2 flex-shrink-0">
-        {view.phase === 'scored' ? (
-          <button
-            onClick={onNextDeal}
-            className="w-full bg-gold hover:bg-wood text-white font-semibold rounded-lg px-3 py-2 text-sm transition"
-          >
-            → Next deal
-          </button>
-        ) : (
-          <>
-            <div className="text-xs text-wood font-semibold mb-1 uppercase tracking-wider flex justify-between">
-              <span>Your hand ({view.myHand.length})</span>
-              <button
-                onClick={() => setShowInfo(true)}
-                className="text-lg hover:text-wood-dark transition"
-              >
-                ℹ
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-1 justify-center">
-              {sortCards(view.myHand).map((c, i) => {
-                const isMyTurn = view.phase === 'play' && view.turn === view.seat;
-                const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
-                const isTrump = view.contract?.trump !== 'NT' && c.suit === view.contract?.trump;
-                return (
-                  <div key={`${c.rank}${c.suit}${i}`} className={isTrump ? 'ring-2 ring-red-500 rounded-sm' : ''}>
-                    <CardView
-                      card={c}
-                      disabled={!isLegal}
-                      small
-                      onClick={isLegal ? () => onAction({ type: 'play', card: c }) : undefined}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
 
       {/* Info Overlay */}
       {showInfo && (
@@ -400,7 +410,7 @@ function GameUI({
           onClick={() => setShowInfo(false)}
         >
           <div
-            className="bg-cream w-full rounded-t-2xl p-4 space-y-3 max-h-[80vh] overflow-y-auto"
+            className="bg-panel w-full rounded-t-2xl p-4 space-y-3 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Phase & Contract */}

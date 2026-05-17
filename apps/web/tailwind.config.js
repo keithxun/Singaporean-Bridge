@@ -9,6 +9,7 @@ module.exports = {
         'felt-dark': '#1b4a2a',
         wood: '#a0724a',
         'wood-dark': '#7a5230',
+        'wood-light': '#D2B48C',
         panel: '#ede0c8',
         ink: '#2c1a0e',
         gold: '#c8991a',
