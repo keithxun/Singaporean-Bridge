@@ -1,10 +1,18 @@
 import './globals.css';
+import type { Viewport } from 'next';
 import type { ReactNode } from 'react';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+};
 
 export const metadata = {
   title: 'Singaporean Bridge',
   description: 'Play Singapore Bridge online',
-  viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
