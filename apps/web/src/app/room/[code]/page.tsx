@@ -349,9 +349,7 @@ function GameUI({
         {view.phase === 'play' && (
           <div className="flex justify-center">
             {(() => {
-              const myPlayedCard =
-                view.currentTrick?.cards.find((c) => c.seat === view.seat) ??
-                view.lastCompletedTrick?.cards.find((c) => c.seat === view.seat);
+              const myPlayedCard = view.currentTrick?.cards.find((c) => c.seat === view.seat);
               return myPlayedCard ? (
                 <CardView card={myPlayedCard.card} disabled small />
               ) : null;
@@ -361,7 +359,7 @@ function GameUI({
       </div>
 
       {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
+      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-0 flex gap-0 flex-shrink-0 items-stretch">
         {/* Player Profile Card - 1/3 width */}
         <div className="w-1/3 flex-shrink-0 min-w-0">
           <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
