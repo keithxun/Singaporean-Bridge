@@ -151,7 +151,7 @@ export default function RoomPage() {
   const view = snapshot.view;
 
   return (
-    <main className="min-h-screen p-2 md:p-4 space-y-4">
+    <main className="min-h-screen p-2 md:p-4 space-y-2 flex flex-col">
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
@@ -159,33 +159,26 @@ export default function RoomPage() {
         </div>
       )}
 
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <h1 className="text-2xl md:text-xl font-bold text-ink">
-          Room <span className="tracking-widest">{code}</span>
-        </h1>
-        <div className="flex gap-2 self-start md:self-auto">
-          {view && (
+      {/* Header - only during lobby */}
+      {!view && (
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <h1 className="text-2xl md:text-xl font-bold text-ink">
+            Room <span className="tracking-widest">{code}</span>
+          </h1>
+          <div className="flex gap-2 self-start md:self-auto">
             <button
-              onClick={() => setShowStats(!showStats)}
-              className={`text-xs px-3 py-2 rounded font-semibold transition ${
-                showStats ? 'bg-gold text-white' : 'bg-panel text-ink hover:bg-wood-dark hover:text-white border border-wood-dark'
-              }`}
+              onClick={() => {
+                navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
+              className="text-xs bg-panel hover:bg-wood-dark hover:text-white text-ink px-3 py-2 rounded transition border border-wood-dark font-semibold"
             >
-              📊 Stats
+              {copied ? '✓ Copied' : 'Copy invite link'}
             </button>
-          )}
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(shareUrl);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-            className="text-xs bg-panel hover:bg-wood-dark hover:text-white text-ink px-3 py-2 rounded transition border border-wood-dark font-semibold"
-          >
-            {copied ? '✓ Copied' : 'Copy invite link'}
-          </button>
-        </div>
-      </header>
+          </div>
+        </header>
+      )}
 
       {/* Stats Panel */}
       {showStats && view && (
@@ -212,7 +205,7 @@ export default function RoomPage() {
           setError={setError}
         />
       ) : (
-        <>
+        <div className="flex-1 min-h-0 overflow-hidden">
           <GameUI
             view={view}
             names={names}
@@ -221,11 +214,7 @@ export default function RoomPage() {
             onNextDeal={() => emitAck('game:nextDeal', {})}
             onSendMessage={(text) => emitAck('chat:send', { text })}
           />
-          {/* Mobile Chat Bar */}
-          <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-cream/95 border-t-2 border-wood-dark p-2">
-            <Chat messages={snapshot.messages} onSendMessage={(text) => emitAck('chat:send', { text })} />
-          </div>
-        </>
+        </div>
       )}
     </main>
   );
@@ -326,64 +315,91 @@ function GameUI({
   onSendMessage: (text: string) => void;
 }) {
   const [showInfo, setShowInfo] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const myName = names[view.seat] || `Seat ${view.seat}`;
 
+  // Calculate tricks won for this player
+  const tricksWon = view.tricks?.filter(t => t.cards.some(c => c.seat === view.seat &&
+    (() => {
+      const led = t.cards[0].card.suit;
+      const trump = view.contract?.trump || 'NT';
+      let winner = t.cards[0].seat;
+      let winningCard = t.cards[0].card;
+      for (let i = 1; i < t.cards.length; i++) {
+        const card = t.cards[i].card;
+        if ((trump !== 'NT' && card.suit === trump && winningCard.suit !== trump) ||
+            (card.suit === winningCard.suit && RANK_ORDER.indexOf(card.rank as any) > RANK_ORDER.indexOf(winningCard.rank as any))) {
+          winner = t.cards[i].seat;
+          winningCard = card;
+        }
+      }
+      return winner === view.seat;
+    })()
+  )).length || 0;
+
   return (
-    <div className="flex flex-col h-full bg-cream overflow-hidden">
+    <div className="flex flex-col h-screen bg-cream overflow-hidden gap-1">
       {/* Opponents Row */}
       <Opponents view={view} names={names} />
 
-      {/* Felt Play Area - grows to fill */}
-      <div className="flex-1 bg-felt" />
+      {/* Felt Play Area - minimal height */}
+      <div className="h-12 bg-felt flex-shrink-0" />
 
       {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t-4 border-wood-dark px-2 py-2 flex gap-2 flex-shrink-0 items-stretch">
+      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
         {/* Player Profile Card - 1/3 width */}
-        <div className="flex-none w-1/3 min-w-0">
-          <MyPlayerCard view={view} name={myName} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
+        <div className="w-1/3 flex-shrink-0 min-w-0">
+          <MyPlayerCard view={view} name={myName} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
         </div>
 
-        {/* Action Panel - 2/3 width */}
-        <div className="flex-1 min-w-0 overflow-y-auto">
-          {view.phase === 'bidding' && (
-            <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
-          )}
-          {view.phase === 'callPartner' && (
-            <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
-          )}
-          {view.phase === 'play' && view.contract && (
-            <div className="bg-panel border-2 border-wood-dark rounded p-3 text-center">
-              <div className="text-xs text-wood font-semibold uppercase mb-1">Contract</div>
-              <div className="text-lg font-bold text-ink">
-                {view.contract.level}{TRUMP_LABEL[view.contract.trump]}
-              </div>
-              <div className="text-xs text-wood mt-1">by {names[view.contract.declarer]}</div>
-            </div>
-          )}
-          {view.phase === 'scored' && (
+        {/* Action Panel + Toggles - 2/3 width */}
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          {/* Toggles Row */}
+          <div className="flex gap-1">
             <button
-              onClick={onNextDeal}
-              className="w-full bg-felt hover:bg-felt-dark text-white font-semibold rounded px-3 py-2 text-sm transition"
+              onClick={() => setShowInfo(!showInfo)}
+              className={`flex-1 text-xs font-semibold rounded px-2 py-1 transition ${showInfo ? 'bg-gold text-white' : 'bg-white text-ink border border-wood-dark hover:bg-wood-light'}`}
             >
-              → Next deal
+              ℹ Info
             </button>
-          )}
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className={`flex-1 text-xs font-semibold rounded px-2 py-1 transition ${showChat ? 'bg-gold text-white' : 'bg-white text-ink border border-wood-dark hover:bg-wood-light'}`}
+            >
+              💬 Chat
+            </button>
+          </div>
+
+          {/* Action Panel */}
+          <div className="flex-1 min-w-0 overflow-y-auto">
+            {view.phase === 'bidding' && (
+              <BiddingPanel view={view} onBid={(bid) => onAction({ type: 'bid', bid })} />
+            )}
+            {view.phase === 'callPartner' && (
+              <CallPartnerPanel view={view} onCall={(card) => onAction({ type: 'callPartner', card })} />
+            )}
+            {view.phase === 'play' && view.contract && (
+              <div className="bg-panel border border-wood-dark rounded p-2 text-center text-xs">
+                <div className="text-wood font-bold">{view.contract.level}{TRUMP_LABEL[view.contract.trump]}</div>
+                <div className="text-wood text-xs">{names[view.contract.declarer]}</div>
+              </div>
+            )}
+            {view.phase === 'scored' && (
+              <button
+                onClick={onNextDeal}
+                className="w-full bg-felt hover:bg-felt-dark text-white font-semibold rounded px-2 py-1 text-xs transition"
+              >
+                Next deal
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Hand Area */}
       {view.phase !== 'scored' && (
-        <div className="bg-panel border-t-2 border-wood-dark px-2 py-2 flex-shrink-0">
-          <div className="text-xs text-wood font-semibold mb-1 uppercase tracking-wider flex justify-between">
-            <span>Your hand ({view.myHand.length})</span>
-            <button
-              onClick={() => setShowInfo(true)}
-              className="text-lg hover:text-wood-dark transition"
-            >
-              ℹ
-            </button>
-          </div>
-          <div className="flex gap-1 justify-center">
+        <div className="bg-panel border-t border-wood-dark px-1 py-1 flex-shrink-0 min-h-0">
+          <div className="flex gap-1 justify-center h-full">
             {sortCards(view.myHand).map((c, i) => {
               const isMyTurn = view.phase === 'play' && view.turn === view.seat;
               const isLegal = isMyTurn && isLegalPlay(view.myHand, c, view.currentTrick, view.contract?.trump, view.trumpBroken);
@@ -456,14 +472,32 @@ function GameUI({
               </div>
             </div>
 
-            {/* Chat */}
-            <div className="bg-panel border-2 border-wood-dark rounded p-2">
-              <Chat messages={messages} onSendMessage={onSendMessage} />
-            </div>
-
             {/* Close Button */}
             <button
               onClick={() => setShowInfo(false)}
+              className="w-full bg-wood-dark hover:bg-wood text-white font-semibold rounded py-2 text-sm transition"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Chat Modal */}
+      {showChat && (
+        <div
+          className="fixed inset-0 bg-black/50 z-50 flex items-end overflow-hidden"
+          onClick={() => setShowChat(false)}
+        >
+          <div
+            className="bg-panel w-full rounded-t-2xl p-3 max-h-[60vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-2">
+              <Chat messages={messages} onSendMessage={onSendMessage} />
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
               className="w-full bg-wood-dark hover:bg-wood text-white font-semibold rounded py-2 text-sm transition"
             >
               Close
