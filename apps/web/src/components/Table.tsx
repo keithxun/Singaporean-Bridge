@@ -18,7 +18,7 @@ export function Table({ view, names }: { view: PlayerView; names: Record<number,
   return (
     <div className="flex flex-col gap-3">
       {/* Circle */}
-      <div className="relative w-full aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700">
+      <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md aspect-square mx-auto bg-emerald-800/40 rounded-full border-2 border-emerald-700">
         {seats.map((s) => {
           const pos = relativePos(view.seat, s);
           const isTurn = view.turn === s;
