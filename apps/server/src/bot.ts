@@ -188,6 +188,7 @@ export function botPlay(
 function getPartnerMissingSuits(view: PlayerView): Set<string> {
   const partnerSeat = view.partnerSeatRevealed;
   if (partnerSeat === undefined) return new Set();
+  if (!Array.isArray(view.tricks)) return new Set();
 
   // Look through all tricks to find a suit partner couldn't follow
   for (const trick of view.tricks) {

@@ -176,6 +176,7 @@ export interface PlayerView {
   contract?: Contract;
   partnerSeatRevealed?: SeatIndex;
   currentTrick?: Trick;
+  tricks: Trick[];
   tricksWonBy: [number, number, number, number];
   scores: [number, number, number, number];
   lastCompletedTrick?: Trick;
@@ -195,6 +196,7 @@ export function viewFor(state: GameState, seat: SeatIndex): PlayerView {
     contract: state.contract,
     partnerSeatRevealed: state.partnerSeat,
     currentTrick: state.currentTrick,
+    tricks: state.tricks,
     tricksWonBy: state.tricksWonBy,
     scores: state.scores,
     lastCompletedTrick: state.tricks[state.tricks.length - 1],
