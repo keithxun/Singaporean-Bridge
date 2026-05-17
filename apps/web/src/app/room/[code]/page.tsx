@@ -39,7 +39,6 @@ export default function RoomPage() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [shareUrl, setShareUrl] = useState('');
-  const [showStats, setShowStats] = useState(false);
   const [namePrompt, setNamePrompt] = useState('');
   const [needsName, setNeedsName] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -151,7 +150,7 @@ export default function RoomPage() {
   const view = snapshot.view;
 
   return (
-    <main className="min-h-screen p-2 md:p-4 space-y-2 flex flex-col">
+    <main className={`h-screen overflow-hidden flex flex-col ${!view ? 'p-2 md:p-4' : 'p-0'}`}>
       {/* Error Toast */}
       {error && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg text-sm font-semibold animate-fade-in-out z-50 max-w-md text-center">
@@ -161,7 +160,7 @@ export default function RoomPage() {
 
       {/* Header - only during lobby */}
       {!view && (
-        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+        <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
           <h1 className="text-2xl md:text-xl font-bold text-ink">
             Room <span className="tracking-widest">{code}</span>
           </h1>
@@ -180,20 +179,6 @@ export default function RoomPage() {
         </header>
       )}
 
-      {/* Stats Panel */}
-      {showStats && view && (
-        <div className="bg-panel border-2 border-wood-dark rounded-lg p-3 text-xs">
-          <div className="font-semibold text-wood mb-2 text-sm">Room Scores</div>
-          <div className="text-ink space-y-1.5">
-            {view.scores.map((score, i) => (
-              <div key={i} className="flex justify-between items-center">
-                <span>{names[i]}</span>
-                <span className="font-bold text-lg text-wood">{score}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {!view ? (
         <Lobby
@@ -314,7 +299,6 @@ function GameUI({
   onNextDeal: () => void;
   onSendMessage: (text: string) => void;
 }) {
-  const [showInfo, setShowInfo] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const myName = names[view.seat] || `Seat ${view.seat}`;
 
@@ -338,37 +322,42 @@ function GameUI({
   )).length || 0;
 
   return (
-    <div className="flex flex-col h-screen bg-cream overflow-hidden gap-1">
+    <div className="flex flex-col h-screen bg-wood-dark overflow-hidden gap-0">
       {/* Opponents Row */}
       <Opponents view={view} names={names} />
 
-      {/* Felt Play Area - minimal height */}
-      <div className="h-12 bg-felt flex-shrink-0" />
+      {/* Bidding/Play Area */}
+      <div className="flex-1 bg-felt flex-shrink-0 min-h-0 flex items-center justify-center">
+        {view.phase === 'bidding' && (
+          <div className="flex gap-4 flex-wrap justify-center">
+            {view.bidHistory.map((bid, i) => (
+              <div key={i} className="text-center">
+                <div className="text-gold text-2xl font-bold">
+                  {bid.bid === 'pass' ? 'Pass' : `${bid.bid.level}${TRUMP_LABEL[bid.bid.trump]}`}
+                </div>
+                <div className="text-xs text-panel">{names[bid.seat]}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* My Player Card + Action Panel Row */}
-      <div className="bg-wood-light border-t-2 border-wood-dark px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
+      <div className="bg-wood-light border-t border-gold px-1 py-1 flex gap-1 flex-shrink-0 items-stretch">
         {/* Player Profile Card - 1/3 width */}
         <div className="w-1/3 flex-shrink-0 min-w-0">
-          <MyPlayerCard view={view} name={myName} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
+          <MyPlayerCard view={view} name={myName} score={view.scores[view.seat]} tricksWon={tricksWon} displayTrick={view.currentTrick && view.currentTrick.cards.length > 0 ? view.currentTrick : view.lastCompletedTrick} />
         </div>
 
         {/* Action Panel + Toggles - 2/3 width */}
         <div className="flex-1 min-w-0 flex flex-col gap-1">
-          {/* Toggles Row */}
-          <div className="flex gap-1">
-            <button
-              onClick={() => setShowInfo(!showInfo)}
-              className={`flex-1 text-xs font-semibold rounded px-2 py-1 transition ${showInfo ? 'bg-gold text-white' : 'bg-white text-ink border border-wood-dark hover:bg-wood-light'}`}
-            >
-              ℹ Info
-            </button>
-            <button
-              onClick={() => setShowChat(!showChat)}
-              className={`flex-1 text-xs font-semibold rounded px-2 py-1 transition ${showChat ? 'bg-gold text-white' : 'bg-white text-ink border border-wood-dark hover:bg-wood-light'}`}
-            >
-              💬 Chat
-            </button>
-          </div>
+          {/* Chat Toggle */}
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className={`text-xs font-semibold rounded px-2 py-1 transition ${showChat ? 'bg-gold text-wood-dark' : 'bg-panel text-ink border border-wood-dark hover:bg-gold hover:text-wood-dark'}`}
+          >
+            💬 Chat
+          </button>
 
           {/* Action Panel */}
           <div className="flex-1 min-w-0 overflow-y-auto">
@@ -387,7 +376,7 @@ function GameUI({
             {view.phase === 'scored' && (
               <button
                 onClick={onNextDeal}
-                className="w-full bg-felt hover:bg-felt-dark text-white font-semibold rounded px-2 py-1 text-xs transition"
+                className="w-full bg-poker-green hover:bg-poker-green text-wood-dark font-semibold rounded px-2 py-1 text-xs transition"
               >
                 Next deal
               </button>
@@ -415,70 +404,6 @@ function GameUI({
                 </div>
               );
             })}
-          </div>
-        </div>
-      )}
-
-      {/* Info Overlay */}
-      {showInfo && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-end overflow-hidden"
-          onClick={() => setShowInfo(false)}
-        >
-          <div
-            className="bg-panel w-full rounded-t-2xl p-4 space-y-3 max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Phase & Contract */}
-            <div className="bg-panel border-2 border-wood-dark rounded p-2 space-y-1">
-              <div className="text-xs text-wood font-semibold">Phase</div>
-              <div className="text-sm text-ink">{view.phase}</div>
-              {view.contract && (
-                <>
-                  <div className="text-xs text-wood font-semibold mt-2">Contract</div>
-                  <div className="text-sm text-ink">
-                    {view.contract.level}{TRUMP_LABEL[view.contract.trump]} by {names[view.contract.declarer]}
-                  </div>
-                  <div className="text-xs text-wood font-semibold mt-2">Partner Card</div>
-                  <div className="text-sm text-ink">
-                    {view.contract.partnerCard.rank}{TRUMP_LABEL[view.contract.partnerCard.suit]}
-                    {view.partnerSeatRevealed !== undefined && ` • ${names[view.partnerSeatRevealed]}`}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Trump Status */}
-            {view.contract && (
-              <div className="bg-panel border-4 border-gold rounded p-2 text-center">
-                <div className="text-xs text-wood font-bold">TRUMP</div>
-                <div className="text-2xl text-wood font-bold">{TRUMP_LABEL[view.contract.trump]}</div>
-                <div className="text-xs text-wood mt-1">
-                  {view.trumpBroken ? '✓ Broken' : '⚠ Not broken'}
-                </div>
-              </div>
-            )}
-
-            {/* Scores */}
-            <div className="bg-panel border-2 border-wood-dark rounded p-2">
-              <div className="text-xs text-wood font-semibold mb-2">Scores</div>
-              <div className="text-ink space-y-1 text-xs">
-                {view.scores.map((score, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span>{names[i]}</span>
-                    <span className="font-bold">{score}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Close Button */}
-            <button
-              onClick={() => setShowInfo(false)}
-              className="w-full bg-wood-dark hover:bg-wood text-white font-semibold rounded py-2 text-sm transition"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}

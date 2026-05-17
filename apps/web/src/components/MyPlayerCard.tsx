@@ -4,22 +4,22 @@ import { CardView } from './Card';
 
 const SEAT_EMOJI = ['🧑', '👩', '🧔', '👱'] as const;
 
-export function MyPlayerCard({ view, name, displayTrick, tricksWon }: { view: PlayerView; name: string; displayTrick?: any; tricksWon?: number }) {
+export function MyPlayerCard({ view, name, displayTrick, tricksWon, score }: { view: PlayerView; name: string; displayTrick?: any; tricksWon?: number; score?: number }) {
   const label = `${name}${view.dealer === view.seat ? '(D)' : ''}`;
 
   // Get this player's played card
   const myPlayedCard = displayTrick?.cards.find((c: any) => c.seat === view.seat);
 
   // Determine highlight color based on game state
-  let bgColor = 'bg-wood-light text-ink'; // default lighter brown
+  let bgColor = 'bg-wood-light text-ink'; // default
   if (view.phase === 'bidding' && view.turn === view.seat) {
-    bgColor = 'bg-gold text-white'; // it's their turn to bid
+    bgColor = 'bg-gold text-wood-dark'; // it's their turn to bid
   } else if (view.phase === 'play' && view.turn === view.seat) {
-    bgColor = 'bg-gold text-white'; // it's their turn to play
+    bgColor = 'bg-poker-green text-wood-dark'; // it's their turn to play
   } else if (view.contract?.declarer === view.seat) {
-    bgColor = 'bg-yellow-500 text-white'; // they are declarer
+    bgColor = 'bg-gold text-wood-dark'; // they are declarer
   } else if (view.contract && view.partnerSeatRevealed === view.seat) {
-    bgColor = 'bg-cyan-500 text-white'; // they are partner
+    bgColor = 'bg-poker-blue text-white'; // they are partner
   }
 
   return (
@@ -30,7 +30,7 @@ export function MyPlayerCard({ view, name, displayTrick, tricksWon }: { view: Pl
           <div className="text-left min-w-0 flex-1">
             <div className="text-xs truncate font-bold">{label}</div>
             <div className="text-xs opacity-90 flex gap-1">
-              <span>{view.myHand.length}🂠</span>
+              {score !== undefined && <span>Score: {score}</span>}
               {tricksWon !== undefined && <span>♦{tricksWon}</span>}
             </div>
           </div>
